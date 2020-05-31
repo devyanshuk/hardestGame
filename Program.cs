@@ -64,11 +64,11 @@ namespace hardestgame
             roundWinFade = false;
             p = new Player();
             //backG = new PixbufAnimation("../../gifs/bg.gif");
-            dollar = new Pixbuf("../../dollar.png");
+            dollar = new Pixbuf("./dollar.png");
             timerStart = timerRunning = false;
             p.dirs = new bool[4];
             bg = new char[mapHeight,mapWidth];
-            var lis = updateEnv($"../../levels/{level}.txt");
+            var lis = updateEnv($"./levels/{level}.txt");
             obs = new obstacle(lis, this.level);
             p.changed += QueueDraw;
             obs.changed += QueueDraw;
@@ -134,7 +134,7 @@ namespace hardestgame
                     }
                 }
             }
-            return lis; 
+            return lis;
         }
         /*
         void updatePlayerPos()
@@ -182,7 +182,7 @@ namespace hardestgame
                     int cell2 = (i < 2) ? (cellHeight / 2) - 1 : (cellWidth / 2) - 1 ;
                     double s = (i < 2) ? p.size.Y / 2 : p.size.X / 2;
                     if (coll(hitPoints[i], wpo, cell) && (coll(ppo + s, wpo2, cell2) || coll(ppo - s, wpo2, cell2))) canNotMove[i] = true;
-                } 
+                }
             }
             p.canNotMove = canNotMove;
         }
@@ -274,11 +274,11 @@ namespace hardestgame
                         }
                     }
                 }
-                
+
                 if (roundWon)
                 {
                     makePlayerDisappear();
-                } 
+                }
             }
          }
 
@@ -360,7 +360,7 @@ namespace hardestgame
         {
             c.SetSourceRGBA(l[0], l[1], l[2], l[3]);
             foreach (PointD pos in checkPoint)
-            { 
+            {
                 c.Rectangle(pos.X, pos.Y, cellWidth, cellHeight);
                 c.Fill();
              }
@@ -392,7 +392,7 @@ namespace hardestgame
         protected override bool OnExposeEvent(EventExpose evnt)
         {
             using (Context c = CairoHelper.Create(GdkWindow))
-            { 
+            {
                 c.SetSourceRGB(0.0,0.5,0.5);
                 c.Arc(7 * 60 + 30, 11 * 60 + 30, 5, 0, 2 * Math.PI);
                 c.Rectangle(0,0, width, height);
