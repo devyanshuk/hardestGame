@@ -13,8 +13,7 @@ namespace hardestgame
 
     public class View : window
     {
-        bool timerStart, timerRunning;
-        int cellWidth = 60, cellHeight = 60;
+        const int CELL_WIDTH = 60, CELL_HEIGHT = 60;
         int yMargin = 0, xMargin = 0;
         Pixbuf dollar;
         char[,] bg;
@@ -29,7 +28,8 @@ namespace hardestgame
         int coinsCollected, totalCoins, level = 4, fails = 0;
         bool pauseGame;
         bool enemy_collision;
-        bool roundWon, roundWinFade;
+        bool roundWon;
+		bool mainTimer = false;
         int circRad = 10;
         List<double> l = new List<double>() { 0.0, 0.7, 0.0, 0.9 }; //checkPoint colour
         Gdk.Key[] dirs = new Gdk.Key[4] {Gdk.Key.Left, Gdk.Key.Right, Gdk.Key.Up, Gdk.Key.Down };
@@ -61,11 +61,8 @@ namespace hardestgame
             roundWon = false;
             totalCoins = 0;
             pauseGame = false;
-            roundWinFade = false;
             p = new Player();
-            //backG = new PixbufAnimation("../../gifs/bg.gif");
             dollar = new Pixbuf("./dollar.png");
-            timerStart = timerRunning = false;
             p.dirs = new bool[4];
             bg = new char[mapHeight,mapWidth];
             var lis = updateEnv($"./levels/{level}.txt");
@@ -76,21 +73,28 @@ namespace hardestgame
             QueueDraw();
         }
 
-        void startTimer()
+		void startTimer()
         {
-            GLib.Timeout.Add(10, delegate
+            if (!mainTimer)
             {
-                obs.move(this.level);
-                enemyCollision();
-                wallCollision();
-                checkForCoins();
-                insideSafeZone();
-                p.changePixPos();
-                QueueDraw();
-                if (enemy_collision || roundWon) makePlayerDisappear();
-                return !enemy_collision && !roundWinFade;
+                GLib.Timeout.Add(10, delegate
+                {
+                    if (!enemy_collision)
+                    {
+                        obs.move(this.level);
+                        enemyCollision();
+                        wallCollision();
+                        checkForCoins();
+                        p.changePixPos();
+                    }
+                    insideSafeZone();
+                    QueueDraw();
+                    if (enemy_collision || roundWon) makePlayerDisappear();
+                    return true;
 
             });
+                mainTimer = true;
+            }
 
         }
 
@@ -104,7 +108,7 @@ namespace hardestgame
                     string s = r.ReadLine();
                     for (int j = 0; j < mapWidth; j++) {
                         char currChar = s[j];
-                        PointD pos = new PointD(xMargin + cellWidth * j, yMargin + cellHeight * i);
+                        PointD pos = new PointD(xMargin + CELL_WIDTH * j, yMargin + CELL_HEIGHT * i);
                         if (currChar != '1' && currChar != '#')
                         {
                             if (currChar == 'P')
@@ -116,16 +120,16 @@ namespace hardestgame
                             else if (currChar == 'X')
                             {
                                 totalCoins++;
-                                coinPos.Add(new PointD(pos.X + cellWidth / 2, pos.Y + cellHeight / 2));
+                                coinPos.Add(new PointD(pos.X + CELL_WIDTH / 2, pos.Y + CELL_HEIGHT / 2));
                             }
                             else if (currChar == '2')
                             {
                                 totalCoins++;
-                                coinPos.Add(new PointD(pos.X + cellWidth / 2, pos.Y + cellHeight / 2));
-                                lis.Add(new PointD(pos.X + cellWidth / 2, pos.Y + cellHeight / 2));
+                                coinPos.Add(new PointD(pos.X + CELL_WIDTH / 2, pos.Y + CELL_HEIGHT / 2));
+                                lis.Add(new PointD(pos.X + CELL_WIDTH / 2, pos.Y + CELL_HEIGHT / 2));
 
                             }
-                            else lis.Add(new PointD(pos.X + cellWidth / 2 + ((currChar =='>')? cellWidth/2 : (currChar == '<')? -cellWidth/2 : 0), pos.Y + cellHeight / 2)) ;
+                            else lis.Add(new PointD(pos.X + CELL_WIDTH / 2 + ((currChar =='>')? CELL_WIDTH/2 : (currChar == '<')? -CELL_WIDTH/2 : 0), pos.Y + CELL_HEIGHT / 2)) ;
                             currChar = '1';
                         }
 
@@ -136,20 +140,6 @@ namespace hardestgame
             }
             return lis;
         }
-        /*
-        void updatePlayerPos()
-        {
-            timerRunning = true;
-            timerStart = false;
-            GLib.Timeout.Add(10, delegate
-            //{
-                wallCollision();
-                checkForCoins();
-                insideSafeZone();
-                p.changePixPos();
-                return (p.dirs[0] || p.dirs[1] || p.dirs[2] || p.dirs[3]);
-            });
-        } */
 
         void checkForCoins()
         {
@@ -172,14 +162,14 @@ namespace hardestgame
             bool[] canNotMove = new bool[4]; //left, right, up, down
             foreach (PointD wall in walls)
             {
-                PointD wPos = new PointD(wall.X + cellWidth / 2, wall.Y + cellHeight / 2);
+                PointD wPos = new PointD(wall.X + CELL_WIDTH / 2, wall.Y + CELL_HEIGHT / 2);
                 for (int i = 0; i < 4; i++)
                 {
                     double wpo = (i < 2) ? wPos.X : wPos.Y;
                     double wpo2 = (i < 2) ? wPos.Y : wPos.X;
                     double ppo = (i < 2) ? pPos.Y : pPos.X;
-                    int cell = (i < 2) ? (cellWidth / 2) - 1 : (cellHeight / 2) - 1;
-                    int cell2 = (i < 2) ? (cellHeight / 2) - 1 : (cellWidth / 2) - 1 ;
+                    int cell = (i < 2) ? (CELL_WIDTH / 2) - 1 : (CELL_HEIGHT / 2) - 1;
+                    int cell2 = (i < 2) ? (CELL_HEIGHT / 2) - 1 : (CELL_WIDTH / 2) - 1 ;
                     double s = (i < 2) ? p.size.Y / 2 : p.size.X / 2;
                     if (coll(hitPoints[i], wpo, cell) && (coll(ppo + s, wpo2, cell2) || coll(ppo - s, wpo2, cell2))) canNotMove[i] = true;
                 }
@@ -205,43 +195,21 @@ namespace hardestgame
             return false;
         }
 
-        bool _makePlayerDisappear()
-        {
-            playerOpacity -= 0.02;
-            pauseGame = true;
-            if (playerOpacity <= 0.0)
-            {
-                if (roundWon)
-                    roundWinFade = true;
-                QueueDraw();
-                init();
-                enemy_collision = false;
-                return false;
-            }
-            QueueDraw();
-            return true;
-        }
-
         void makePlayerDisappear()
         {
             if (!roundWon) p.dirs = new bool[4];
-            if (enemy_collision)
-            {
-                GLib.Timeout.Add(7, delegate
+                playerOpacity -= 0.02;
+                if (playerOpacity <= 0.0)
                 {
-                    return _makePlayerDisappear();
-                    //return true;
-                });
-            }
-            if (roundWon)
-            {
-                bool a = _makePlayerDisappear();
-            }
-        }
+                    init();
+                    return;
+                }
+                QueueDraw();
+          }
 
         void enemyCollision()
         {
-            if (!pauseGame)
+            if (!roundWon)
             {
                 foreach (PointD po in obs.pos)
                 {
@@ -253,7 +221,6 @@ namespace hardestgame
                         break;
                     }
                 }
-                //if (enemy_collision) makePlayerDisappear();
             }
         }
 
@@ -263,8 +230,8 @@ namespace hardestgame
             {
                 foreach (PointD pos in checkPoint)
                 {
-                    PointD po = new PointD(pos.X + cellWidth / 2, pos.Y + cellHeight / 2);
-                    if (collision(po, cellWidth / 2))
+                    PointD po = new PointD(pos.X + CELL_WIDTH / 2, pos.Y + CELL_HEIGHT / 2);
+                    if (collision(po, CELL_WIDTH / 2))
                     {
                         checkPointPos = pos;
                         if (!enemy_collision && coinsCollected == totalCoins && totalCoins != 0)
@@ -286,9 +253,7 @@ namespace hardestgame
         {
             for(int i = 0; i < 4; i++)
                 if (evnt.Key == this.dirs[i] && !p.dirs[i])
-                    p.dirs[i] = timerStart = true;
-            //if (!timerRunning && timerStart && !pauseGame && !roundWon)
-                //updatePlayerPos();
+                    p.dirs[i] = true;
             return true;
 
         }
@@ -298,7 +263,6 @@ namespace hardestgame
             for (int i = 0; i < 4; i++)
                 if (evnt.Key == this.dirs[i] && p.dirs[i])
                     p.dirs[i] = false;
-            if (!p.dirs[0] && !p.dirs[1] && !p.dirs[2] && !p.dirs[3]) timerStart = timerRunning = false;
             if (!pauseGame && !roundWon) QueueDraw();
             return true;
         }
@@ -321,11 +285,11 @@ namespace hardestgame
                 {
                     if (bg[i, j] == '1')
                     {
-                        PointD currPos = new PointD(xMargin + cellWidth * j, yMargin + cellHeight * i);
+                        PointD currPos = new PointD(xMargin + CELL_WIDTH * j, yMargin + CELL_HEIGHT * i);
                         c.MoveTo(currPos);
                         if (j % 2 == i % 2) c.SetSourceRGB(1.0, 1.0, 1.0);
                         else c.SetSourceRGB(0.6, 0.9, 0.9);
-                        c.Rectangle(currPos.X, currPos.Y, cellWidth, cellHeight);
+                        c.Rectangle(currPos.X, currPos.Y, CELL_WIDTH, CELL_HEIGHT);
                         c.Fill();
                     }
                 }
@@ -361,7 +325,7 @@ namespace hardestgame
             c.SetSourceRGBA(l[0], l[1], l[2], l[3]);
             foreach (PointD pos in checkPoint)
             {
-                c.Rectangle(pos.X, pos.Y, cellWidth, cellHeight);
+                c.Rectangle(pos.X, pos.Y, CELL_WIDTH, CELL_HEIGHT);
                 c.Fill();
              }
         }
