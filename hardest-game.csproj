@@ -12,9 +12,9 @@
     <Reference Include="Mono.Cairo" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="enemy.cs" />
+    <Compile Include="obstacle.cs" />
     <Compile Include="player.cs" />
-    <Compile Include="Program.cs" />
+    <Compile Include="view.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>
