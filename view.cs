@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Gtk;
 using Gdk;
 using Cairo;
@@ -22,14 +22,15 @@ namespace hardestgame
         obstacle obs;
         List<PointD> checkPoint;
         int width = 1380, height = 850;
+        bool mainTimer = false;
         double playerOpacity;
         int mapWidth = 23, mapHeight = 13;
         PointD checkPointPos = new PointD(0,0);
         int coinsCollected, totalCoins, level = 4, fails = 0;
         bool pauseGame;
+        bool safeZone;
         bool enemy_collision;
         bool roundWon;
-		bool mainTimer = false;
         int circRad = 10;
         List<double> l = new List<double>() { 0.0, 0.7, 0.0, 0.9 }; //checkPoint colour
         Gdk.Key[] dirs = new Gdk.Key[4] {Gdk.Key.Left, Gdk.Key.Right, Gdk.Key.Up, Gdk.Key.Down };
@@ -61,6 +62,7 @@ namespace hardestgame
             roundWon = false;
             totalCoins = 0;
             pauseGame = false;
+            safeZone = false;
             p = new Player();
             dollar = new Pixbuf("./dollar.png");
             p.dirs = new bool[4];
@@ -73,7 +75,7 @@ namespace hardestgame
             QueueDraw();
         }
 
-		void startTimer()
+        void startTimer()
         {
             if (!mainTimer)
             {
@@ -82,7 +84,7 @@ namespace hardestgame
                     if (!enemy_collision)
                     {
                         obs.move(this.level);
-                        enemyCollision();
+                        if (!safeZone) enemyCollision();
                         wallCollision();
                         checkForCoins();
                         p.changePixPos();
@@ -109,7 +111,7 @@ namespace hardestgame
                     for (int j = 0; j < mapWidth; j++) {
                         char currChar = s[j];
                         PointD pos = new PointD(xMargin + CELL_WIDTH * j, yMargin + CELL_HEIGHT * i);
-                        if (currChar != '1' && currChar != '#')
+                        if (currChar != '1' && currChar != '#' && currChar != ']' && currChar != '[')
                         {
                             if (currChar == 'P')
                             {
@@ -129,12 +131,22 @@ namespace hardestgame
                                 lis.Add(new PointD(pos.X + CELL_WIDTH / 2, pos.Y + CELL_HEIGHT / 2));
 
                             }
+                            else if (currChar == ';' || currChar == 'V')
+                            {
+                                lis.Add(new PointD(pos.X + CELL_WIDTH / 2, pos.Y + CELL_HEIGHT / 2));
+                                lis.Add(new PointD(pos.X + CELL_WIDTH / 2 + ((currChar == ';') ? CELL_WIDTH / 2 : 0), pos.Y + CELL_HEIGHT / 2 + ((currChar == 'V') ? CELL_HEIGHT / 2 : 0)));
+                            }
                             else lis.Add(new PointD(pos.X + CELL_WIDTH / 2 + ((currChar =='>')? CELL_WIDTH/2 : (currChar == '<')? -CELL_WIDTH/2 : 0), pos.Y + CELL_HEIGHT / 2)) ;
                             currChar = '1';
                         }
 
                         bg[i, j] = currChar;
                         if (currChar == '#') walls.Add(pos);
+                        else if (currChar == '[' || currChar == ']')
+                        {
+                            walls.Add(pos);
+                            lis.Add(new PointD(pos.X + CELL_WIDTH / 2 + ((currChar == ']') ? CELL_WIDTH / 2 : (currChar == '[') ? -CELL_WIDTH / 2 : 0), pos.Y + CELL_HEIGHT / 2));
+                        }
                     }
                 }
             }
@@ -228,12 +240,14 @@ namespace hardestgame
         {
             if (!roundWon)
             {
+                safeZone = false;
                 foreach (PointD pos in checkPoint)
                 {
                     PointD po = new PointD(pos.X + CELL_WIDTH / 2, pos.Y + CELL_HEIGHT / 2);
                     if (collision(po, CELL_WIDTH / 2))
                     {
                         checkPointPos = pos;
+                        safeZone = true;
                         if (!enemy_collision && coinsCollected == totalCoins && totalCoins != 0)
                         {
                             roundWon = true;
@@ -357,9 +371,8 @@ namespace hardestgame
         {
             using (Context c = CairoHelper.Create(GdkWindow))
             {
-                c.SetSourceRGB(0.0,0.5,0.5);
-                c.Arc(7 * 60 + 30, 11 * 60 + 30, 5, 0, 2 * Math.PI);
-                c.Rectangle(0,0, width, height);
+                c.SetSourceRGB(0.0, 0.5, 0.5);
+                c.Rectangle(0, 0, width, height);
                 c.Fill();
                 drawMap(c);
                 drawCheckPoints(c);
@@ -367,6 +380,9 @@ namespace hardestgame
                 updateScoreAndLives(c);
                 drawObstacles(c);
                 drawPlayer(c);
+                //c.SetSourceRGB(1, 0, 0);
+                //c.Arc(11 * 60 + 60, 6 * 60 + 30, 12, 0, 2 * Math.PI);
+                //c.Fill();
 
             }
             p.canNotMove = new bool[4];
