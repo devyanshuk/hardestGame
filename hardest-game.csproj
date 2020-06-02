@@ -15,6 +15,7 @@
     <Compile Include="obstacle.cs" />
     <Compile Include="player.cs" />
     <Compile Include="view.cs" />
+    <Compile Include="movement.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

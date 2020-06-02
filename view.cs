@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.IO;
 using window = Gtk.Window;
-
+using static hardestgame.movement;
 
 namespace hardestgame
 {
@@ -70,8 +70,8 @@ namespace hardestgame
             bg = new char[mapHeight,mapWidth];
             var lis = updateEnv($"./levels/{level}.txt", out List<PointD>hitPoints, out List<circleMovement> c, out List<xyMovement> xy);
             obs = new obstacle(lis, this.level, hitPoints, c, xy);
-            p.changed += QueueDraw;
-            obs.changed += QueueDraw;
+            //p.changed += QueueDraw;
+            //obs.changed += QueueDraw;
             startTimer();
             QueueDraw();
         }
