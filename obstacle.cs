@@ -2,7 +2,7 @@ using System;
 using Cairo;
 using System.Collections.Generic;
 using static State;
-enum State { up, down, left, right }; //types of movements
+public enum State { up, down, left, right }; //types of movements
 public enum CircleDir { clockwise, anticlockwise};
 
 namespace hardestgame {
@@ -24,23 +24,42 @@ namespace hardestgame {
         }
     }
 
+    public class xyMovement
+    {
+        public double velocity;
+        public PointD pos;
+        public State dir;
+        public xyMovement(double velocity, PointD pos, State dir)
+        {
+            this.velocity = velocity;
+            this.pos = pos;
+            this.dir = dir;
+        }
+    }
+
     public class obstacle
     {
         public List<PointD> pos;
         public int size = 12;
         public event Notify changed;
         List<circleMovement> circleMov;
+        List<xyMovement> xyMov;
+        List<PointD> wallHitPoints;
         List<State> movementType;
-        int velocity = 10;
 
-        public obstacle(List<PointD> pos, int lev)
+        public obstacle(List<PointD> pos, int lev, List<PointD> hitPt)
         {
             this.pos = pos;
             movementType = new List<State>();
+            wallHitPoints = hitPt;
             switch (lev)
             {
                 case 1:
                     init_1(); break;
+                case 2:
+                    init_2(); break;
+                case 3:
+                    init_3(); break;
                 case 4:
                     init_4(); break;
                 case 5:
@@ -62,6 +81,23 @@ namespace hardestgame {
                 else return (Math.PI / 2 + po.angularSpeed * Math.PI / 180);
             }
             return -1;
+        }
+        bool withinBounds(PointD po, PointD p1)
+        {
+            return (po.X >= p1.X && po.X <= p1.X + 30 && po.Y >= p1.Y && po.Y <= p1.Y + 30);
+        }
+
+        bool collision(PointD po, PointD wall)
+        {
+            var l = new PointD(po.X - 4 * size , po.Y);
+            var r = new PointD(po.X + size , po.Y);
+            var d = new PointD(po.X, po.Y + size);
+            var u = new PointD(po.X, po.Y - 4 * size);
+            if (withinBounds(l, wall) || withinBounds(r, wall) || withinBounds(d, wall) || withinBounds(u, wall))
+            {
+                return true;
+            }
+            return false;
         }
 
         public void move(int lev)
@@ -88,19 +124,58 @@ namespace hardestgame {
 
         void init_1()
         {
-            for (int i = 0; i <=pos.Count; i++)
-                movementType.Add((i % 2 == 1)? left : right);
+            xyMov = new List<xyMovement>();
+            double velocity = 10;
+            for (int i = 0; i < pos.Count; i++)
+            {
+                xyMov.Add(new xyMovement(velocity, pos[i], left));
+            }
+
         }
 
         public void move_1()
         {
-            for(int i = 0; i <= pos.Count; i++)
+            for(int i = 0; i < xyMov.Count; i++)
             {
+                foreach (PointD wall in wallHitPoints)
+                {
+                    if (collision(xyMov[i].pos, wall)){
+                        xyMov[i].dir = (xyMov[i].dir == left) ? right : left;
+                    }
+                }
+                xyMov[i].pos.X += (xyMov[i].dir == left) ? -xyMov[i].velocity : xyMov[i].velocity;
+                pos[i] = xyMov[i].pos;
+            }
+        }
 
+        void init_2()
+        {
+            xyMov = new List<xyMovement>();
+            double velocity = 10;
+            for (int i = 0; i < pos.Count; i++)
+            {
+                State dir = (i <= 6) ? down : up;
+                xyMov.Add(new xyMovement(velocity, pos[i], dir));
             }
         }
 
         public void move_2()
+        {
+            for (int i = 0; i < xyMov.Count; i++)
+            {
+                foreach (PointD wall in wallHitPoints)
+                {
+                    if (collision(xyMov[i].pos, wall))
+                    {
+                        xyMov[i].dir = (xyMov[i].dir == up) ? down : up;
+                    }
+                }
+                xyMov[i].pos.Y += (xyMov[i].dir == up) ? -xyMov[i].velocity : xyMov[i].velocity;
+                pos[i] = xyMov[i].pos;
+            }
+        }
+
+        void init_3()
         {
 
         }
@@ -132,7 +207,7 @@ namespace hardestgame {
             foreach (PointD po in pos)
             {
                 CircleDir dir = (count!=4 && count !=5)? CircleDir.clockwise : CircleDir.anticlockwise;
-                double sp = (count!=4 && count!=5)? 1 : 0.7;
+                double sp = (count!=4 && count!=5)? 0.8 : 0.7;
                 circleMovement cp = new circleMovement(sp, po, 0, centre, dir);
                 double angle = findAngle(centre, cp);
                 cp.angle = angle;

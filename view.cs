@@ -26,7 +26,7 @@ namespace hardestgame
         double playerOpacity;
         int mapWidth = 23, mapHeight = 13;
         PointD checkPointPos = new PointD(0,0);
-        int coinsCollected, totalCoins, level = 4, fails = 0;
+        int coinsCollected, totalCoins, level = 1, fails = 0;
         bool pauseGame;
         bool safeZone;
         bool enemy_collision;
@@ -67,8 +67,8 @@ namespace hardestgame
             dollar = new Pixbuf("./dollar.png");
             p.dirs = new bool[4];
             bg = new char[mapHeight,mapWidth];
-            var lis = updateEnv($"./levels/{level}.txt");
-            obs = new obstacle(lis, this.level);
+            var lis = updateEnv($"./levels/{level}.txt", out List<PointD>hitPoints);
+            obs = new obstacle(lis, this.level, hitPoints);
             p.changed += QueueDraw;
             obs.changed += QueueDraw;
             startTimer();
@@ -100,9 +100,10 @@ namespace hardestgame
 
         }
 
-        List<PointD> updateEnv(string fileName)
+        List<PointD> updateEnv(string fileName, out List<PointD> hitPoints)
         {
             List<PointD> lis = new List<PointD>();
+            hitPoints = new List<PointD>();
             using (StreamReader r = new StreamReader(fileName))
             {
                 for(int i = 0; i < mapHeight; i++)
@@ -111,8 +112,9 @@ namespace hardestgame
                     for (int j = 0; j < mapWidth; j++) {
                         char currChar = s[j];
                         PointD pos = new PointD(xMargin + CELL_WIDTH * j, yMargin + CELL_HEIGHT * i);
-                        if (currChar != '1' && currChar != '#' && currChar != ']' && currChar != '[')
+                        if (currChar != '1' && currChar != '#' && currChar != ']' && currChar != '[' && currChar!= 'H')
                         {
+                           ;
                             if (currChar == 'P')
                             {
                                 p.pixPos = (checkPointPos.X != 0 && checkPointPos.Y != 0) ? checkPointPos : pos;
@@ -146,6 +148,12 @@ namespace hardestgame
                         {
                             walls.Add(pos);
                             lis.Add(new PointD(pos.X + CELL_WIDTH / 2 + ((currChar == ']') ? CELL_WIDTH / 2 : (currChar == '[') ? -CELL_WIDTH / 2 : 0), pos.Y + CELL_HEIGHT / 2));
+                        }
+
+                        else if (currChar == 'H')
+                        {
+                            walls.Add(pos);
+                            hitPoints.Add(pos);
                         }
                     }
                 }
