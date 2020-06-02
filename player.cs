@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Cairo;
 public delegate void Notify();
 namespace hardestgame
@@ -31,7 +31,6 @@ namespace hardestgame
             pos.X += speed * x;
             pos.Y += speed * y;
             pixPos = pos;
-            changed?.Invoke();
         }
 
     }

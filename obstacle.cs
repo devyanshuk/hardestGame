@@ -5,7 +5,8 @@ using static State;
 public enum State { up, down, left, right }; //types of movements
 public enum CircleDir { clockwise, anticlockwise};
 
-namespace hardestgame {
+namespace hardestgame
+{
 
     public class circleMovement
     {
@@ -22,6 +23,27 @@ namespace hardestgame {
             this.centre = centre;
             this.dir = dir;
         }
+
+        double dist()
+        {
+            return Math.Sqrt(Math.Abs((centre.X - pos.X) * (centre.X - pos.X)
+                                       + ((centre.Y - pos.Y) * (centre.Y - pos.Y))));
+        }
+
+        public void move()
+        {
+            double newAngle = angularSpeed * Math.PI / 180;
+            angle += (dir == CircleDir.clockwise) ? newAngle : -newAngle;
+        }
+
+        public PointD getNewPos()
+        {
+            double distance = dist();
+            double currAngle = angle;
+            double x = centre.X + distance * Math.Cos(currAngle);
+            double y = centre.Y + distance * Math.Sin(currAngle);
+            return new PointD(x, y);
+        }
     }
 
     public class xyMovement
@@ -35,6 +57,20 @@ namespace hardestgame {
             this.pos = pos;
             this.dir = dir;
         }
+
+        public void changeDir()
+        {
+            this.dir = (dir == left) ? right
+                        : (dir == right) ? left
+                        : (dir == up) ? down
+                        : up;
+        }
+
+        public void move()
+        {
+            pos.X += (dir == left) ? -velocity : (dir == right) ? velocity : 0;
+            pos.Y += (dir == up) ? -velocity : (dir == down) ? velocity : 0;
+        }
     }
 
     public class obstacle
@@ -45,26 +81,16 @@ namespace hardestgame {
         List<circleMovement> circleMov;
         List<xyMovement> xyMov;
         List<PointD> wallHitPoints;
-        List<State> movementType;
 
-        public obstacle(List<PointD> pos, int lev, List<PointD> hitPt)
+        public obstacle(List<PointD> pos, int lev, List<PointD> hitPt, List<circleMovement> c, List<xyMovement> xy)
         {
             this.pos = pos;
-            movementType = new List<State>();
             wallHitPoints = hitPt;
-            switch (lev)
+            circleMov = c;
+            xyMov = xy;
+            for (int i = 0; i < circleMov.Count; i++)
             {
-                case 1:
-                    init_1(); break;
-                case 2:
-                    init_2(); break;
-                case 3:
-                    init_3(); break;
-                case 4:
-                    init_4(); break;
-                case 5:
-                    init_5(); break;
-
+                circleMov[i].angle = findAngle(circleMov[i].centre, circleMov[i]);
             }
         }
 
@@ -82,152 +108,61 @@ namespace hardestgame {
             }
             return -1;
         }
-        bool withinBounds(PointD po, PointD p1)
-        {
-            return (po.X >= p1.X && po.X <= p1.X + 30 && po.Y >= p1.Y && po.Y <= p1.Y + 30);
-        }
 
-        bool collision(PointD po, PointD wall)
+        bool withinBounds(PointD po, PointD p1, double s) => (po.X >= p1.X && po.X <= p1.X + s && po.Y >= p1.Y && po.Y <= p1.Y + s);
+
+        bool collision(PointD po, PointD wall, double s)
         {
-            var l = new PointD(po.X - 4 * size , po.Y);
-            var r = new PointD(po.X + size , po.Y);
+            var l = new PointD(po.X - 3.5 * size, po.Y);
+            var r = new PointD(po.X + size, po.Y);
             var d = new PointD(po.X, po.Y + size);
-            var u = new PointD(po.X, po.Y - 4 * size);
-            if (withinBounds(l, wall) || withinBounds(r, wall) || withinBounds(d, wall) || withinBounds(u, wall))
-            {
+            var u = new PointD(po.X, po.Y - 3.5 * size);
+            if (withinBounds(l, wall, s) || withinBounds(r, wall, s) || withinBounds(d, wall, s) || withinBounds(u, wall, s))
                 return true;
-            }
             return false;
         }
 
         public void move(int lev)
         {
-            switch (lev)
-            {
-                case 1:
-                    move_1(); break;
-                case 2:
-                    move_2(); break;
-                case 3:
-                    move_3(); break;
-                case 4:
-                    move_4_5(); break;
-                case 5:
-                    move_4_5(); break;
-            }
-        }
+            List<PointD> p = new List<PointD>();
 
-        double dist (circleMovement p1)
-        {
-            return Math.Sqrt(Math.Abs((p1.centre.X - p1.pos.X) * (p1.centre.X - p1.pos.X) + ((p1.centre.Y - p1.pos.Y) * (p1.centre.Y - p1.pos.Y))));
-        }
-
-        void init_1()
-        {
-            xyMov = new List<xyMovement>();
-            double velocity = 10;
-            for (int i = 0; i < pos.Count; i++)
-            {
-                xyMov.Add(new xyMovement(velocity, pos[i], left));
-            }
-
-        }
-
-        public void move_1()
-        {
-            for(int i = 0; i < xyMov.Count; i++)
+            for (int i = 0; i < xyMov.Count; i++)
             {
                 foreach (PointD wall in wallHitPoints)
-                {
-                    if (collision(xyMov[i].pos, wall)){
-                        xyMov[i].dir = (xyMov[i].dir == left) ? right : left;
-                    }
-                }
-                xyMov[i].pos.X += (xyMov[i].dir == left) ? -xyMov[i].velocity : xyMov[i].velocity;
-                pos[i] = xyMov[i].pos;
+                    if (collision(xyMov[i].pos, wall, 30))
+                        xyMov[i].changeDir();
+                xyMov[i].move();
+                p.Add(xyMov[i].pos);
             }
-        }
-
-        void init_2()
-        {
-            xyMov = new List<xyMovement>();
-            double velocity = 10;
-            for (int i = 0; i < pos.Count; i++)
+            for (int i = 0; i < circleMov.Count; i++)
             {
-                State dir = (i <= 6) ? down : up;
-                xyMov.Add(new xyMovement(velocity, pos[i], dir));
+                p.Add(circleMov[i].getNewPos());
+                circleMov[i].move();
             }
+            pos = p;
         }
 
-        public void move_2()
+        public void move_3()
         {
             for (int i = 0; i < xyMov.Count; i++)
             {
                 foreach (PointD wall in wallHitPoints)
                 {
-                    if (collision(xyMov[i].pos, wall))
+                    if (((xyMov[i].pos.X <= wall.X) || (xyMov[i].pos.Y >= wall.Y)) && collision(xyMov[i].pos, wall, 30))
                     {
-                        xyMov[i].dir = (xyMov[i].dir == up) ? down : up;
+                        xyMov[i].dir = (xyMov[i].dir == right) ? down
+                                       : (xyMov[i].dir == left) ? up
+                                       : (xyMov[i].dir == up) ? right
+                                       : (xyMov[i].dir == down) ? left
+                                       : xyMov[i].dir;
+                        break;
                     }
                 }
-                xyMov[i].pos.Y += (xyMov[i].dir == up) ? -xyMov[i].velocity : xyMov[i].velocity;
+                xyMov[i].pos.Y += (xyMov[i].dir == up) ? -xyMov[i].velocity
+                                : (xyMov[i].dir == down) ? xyMov[i].velocity : 0;
+                xyMov[i].pos.X += (xyMov[i].dir == left) ? -xyMov[i].velocity
+                                : (xyMov[i].dir == right) ? xyMov[i].velocity : 0;
                 pos[i] = xyMov[i].pos;
-            }
-        }
-
-        void init_3()
-        {
-
-        }
-
-        public void move_3()
-        {
-
-        }
-
-        void init_4()
-        {
-            PointD centre = new PointD(11 * 60 + 30, 7 * 60 + 30);
-            circleMov = new List<circleMovement>();
-            foreach (PointD po in pos)
-            {
-                circleMovement cp = new circleMovement(1.4, po, 0, centre, CircleDir.clockwise);
-                double angle = findAngle(centre, cp);
-                cp.angle = angle;
-                circleMov.Add(cp);
-            }
-
-        }
-
-        void init_5()
-        {
-            PointD centre = new PointD(11 * 60 + 60, 6 * 60 + 30);
-            circleMov = new List<circleMovement>();
-            int count = 0;
-            foreach (PointD po in pos)
-            {
-                CircleDir dir = (count!=4 && count !=5)? CircleDir.clockwise : CircleDir.anticlockwise;
-                double sp = (count!=4 && count!=5)? 0.8 : 0.7;
-                circleMovement cp = new circleMovement(sp, po, 0, centre, dir);
-                double angle = findAngle(centre, cp);
-                cp.angle = angle;
-                circleMov.Add(cp);
-                count++;
-            }
-
-        }
-
-        public void move_4_5()
-        {
-            for (int i = 0; i < circleMov.Count; i++)
-            {
-                double distance = dist(circleMov[i]);
-                double currAngle = circleMov[i].angle;
-                double x = circleMov[i].centre.X + distance * Math.Cos(currAngle);
-                double y = circleMov[i].centre.Y + distance * Math.Sin(currAngle);
-                pos[i] = new PointD(x, y);
-                double newAngle = circleMov[i].angularSpeed * Math.PI / 180;
-                circleMov[i].angle += (circleMov[i].dir == CircleDir.clockwise) ? newAngle : -newAngle;
             }
         }
     }

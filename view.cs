@@ -1,4 +1,5 @@
 using System;
+using static System.Console;
 using Gtk;
 using Gdk;
 using Cairo;
@@ -67,8 +68,8 @@ namespace hardestgame
             dollar = new Pixbuf("./dollar.png");
             p.dirs = new bool[4];
             bg = new char[mapHeight,mapWidth];
-            var lis = updateEnv($"./levels/{level}.txt", out List<PointD>hitPoints);
-            obs = new obstacle(lis, this.level, hitPoints);
+            var lis = updateEnv($"./levels/{level}.txt", out List<PointD>hitPoints, out List<circleMovement> c, out List<xyMovement> xy);
+            obs = new obstacle(lis, this.level, hitPoints, c, xy);
             p.changed += QueueDraw;
             obs.changed += QueueDraw;
             startTimer();
@@ -100,21 +101,94 @@ namespace hardestgame
 
         }
 
-        List<PointD> updateEnv(string fileName, out List<PointD> hitPoints)
+        List<PointD> updateEnv(string fileName, out List<PointD> hitPoints, out List<circleMovement> circleMov, out List<xyMovement> xyMov)
         {
             List<PointD> lis = new List<PointD>();
+            circleMov = new List<circleMovement>();
+            Dictionary<char, Tuple<PointD, CircleDir, double>> cChar = new Dictionary<char, Tuple<PointD, CircleDir, double>>();
+            List<char> xChar = new List<char>();
+            List<char> yChar = new List<char>();
+            List<double> xVel = new List<double>();
+            List<double> yVel = new List<double>();
+            xyMov = new List<xyMovement>();
             hitPoints = new List<PointD>();
             using (StreamReader r = new StreamReader(fileName))
             {
+                while (r.ReadLine() is string s)
+                {
+                    List<string> sp = s.Split().ToList();
+                    if (sp.Count <= 0 || s == "") break;
+
+                    if (sp[0] == "()")
+                    {
+                        double x = 0;
+                        double y = 0;
+                        double vel = 1.4;
+                        CircleDir dir = (sp[1] == "(") ? CircleDir.clockwise : CircleDir.anticlockwise;
+                        double.TryParse(sp[2], out vel);
+                        double.TryParse(sp[3], out x);
+                        double.TryParse(sp[4], out y);
+
+                        PointD centre = new PointD(x * CELL_WIDTH + CELL_WIDTH / 2 , y * CELL_HEIGHT + CELL_HEIGHT / 2);
+                        for (int j = 5; j < sp.Count; j++)
+                            if (!cChar.ContainsKey(char.Parse(sp[j])))
+                                cChar.Add(char.Parse(sp[j]), Tuple.Create(centre, dir, vel));
+                    }
+                    else if (sp[0] == "-")
+                    {
+                        for (int j = 1; j < sp.Count; j++)
+                        {
+                            if (j % 2 == 1)
+                                xChar.Add(char.Parse(sp[j]));
+                            else
+                            {
+                                double.TryParse(sp[j], out double v);
+                                xVel.Add(v);
+                            }
+
+                        }
+                    }
+                    else if (sp[0] == "|")
+                    {
+                        for (int j = 1; j < sp.Count; j++)
+                        {
+                            if (j % 2 == 1)
+                                yChar.Add(char.Parse(sp[j]));
+                            else
+                            {
+                                double.TryParse(sp[j], out double v);
+                                yVel.Add(v);
+                            }
+                        }
+
+                    }
+
+                }
                 for(int i = 0; i < mapHeight; i++)
                 {
                     string s = r.ReadLine();
                     for (int j = 0; j < mapWidth; j++) {
                         char currChar = s[j];
                         PointD pos = new PointD(xMargin + CELL_WIDTH * j, yMargin + CELL_HEIGHT * i);
+                        PointD newPos = new PointD(pos.X + CELL_WIDTH/2, pos.Y + CELL_HEIGHT/2);
+                        if (cChar.ContainsKey(currChar))
+                        {
+                            var t = cChar[currChar];
+                            circleMov.Add(new circleMovement(t.Item3, new PointD(pos.X + 30 + ((currChar == '>' || currChar == ')' || currChar == ']') ? CELL_WIDTH / 2
+                                                    : (currChar == '<' || currChar == '(' || currChar == '[') ? -CELL_WIDTH / 2 : 0), pos.Y + 30), 0, t.Item1, t.Item2));
+                        }
+                        if (xChar.Contains(currChar))
+                        {
+                            int index = xChar.IndexOf(currChar);
+                            xyMov.Add(new xyMovement(xVel[index], newPos, global::State.left));
+                        }
+                        if (yChar.Contains(currChar))
+                        {
+                            int index = yChar.IndexOf(currChar);
+                            xyMov.Add(new xyMovement(yVel[index], newPos, global::State.up));
+                        }
                         if (currChar != '1' && currChar != '#' && currChar != ']' && currChar != '[' && currChar!= 'H')
                         {
-                           ;
                             if (currChar == 'P')
                             {
                                 p.pixPos = (checkPointPos.X != 0 && checkPointPos.Y != 0) ? checkPointPos : pos;
@@ -124,21 +198,26 @@ namespace hardestgame
                             else if (currChar == 'X')
                             {
                                 totalCoins++;
-                                coinPos.Add(new PointD(pos.X + CELL_WIDTH / 2, pos.Y + CELL_HEIGHT / 2));
+                                coinPos.Add(newPos);
                             }
                             else if (currChar == '2')
                             {
                                 totalCoins++;
-                                coinPos.Add(new PointD(pos.X + CELL_WIDTH / 2, pos.Y + CELL_HEIGHT / 2));
-                                lis.Add(new PointD(pos.X + CELL_WIDTH / 2, pos.Y + CELL_HEIGHT / 2));
+                                coinPos.Add(newPos);
+                                lis.Add(newPos);
 
                             }
                             else if (currChar == ';' || currChar == 'V')
                             {
-                                lis.Add(new PointD(pos.X + CELL_WIDTH / 2, pos.Y + CELL_HEIGHT / 2));
-                                lis.Add(new PointD(pos.X + CELL_WIDTH / 2 + ((currChar == ';') ? CELL_WIDTH / 2 : 0), pos.Y + CELL_HEIGHT / 2 + ((currChar == 'V') ? CELL_HEIGHT / 2 : 0)));
+                                lis.Add(newPos);
+                                lis.Add(new PointD(newPos.X + ((currChar == ';') ? CELL_WIDTH / 2 : 0), newPos.Y + ((currChar == 'V') ? CELL_HEIGHT / 2 : 0)));
                             }
-                            else lis.Add(new PointD(pos.X + CELL_WIDTH / 2 + ((currChar =='>')? CELL_WIDTH/2 : (currChar == '<')? -CELL_WIDTH/2 : 0), pos.Y + CELL_HEIGHT / 2)) ;
+                            else
+                            {
+                                newPos = new PointD(pos.X + 30 + ((currChar == '>' || currChar == ')') ? CELL_WIDTH / 2
+                                                    : (currChar == '<' || currChar == '(') ? -CELL_WIDTH / 2 : 0), pos.Y + 30);
+                                lis.Add(newPos);
+                            }
                             currChar = '1';
                         }
 
@@ -147,7 +226,8 @@ namespace hardestgame
                         else if (currChar == '[' || currChar == ']')
                         {
                             walls.Add(pos);
-                            lis.Add(new PointD(pos.X + CELL_WIDTH / 2 + ((currChar == ']') ? CELL_WIDTH / 2 : (currChar == '[') ? -CELL_WIDTH / 2 : 0), pos.Y + CELL_HEIGHT / 2));
+                            newPos = new PointD(newPos.X + ((currChar == ']') ? CELL_WIDTH / 2 : (currChar == '[') ? -CELL_WIDTH / 2 : 0), newPos.Y);
+                            lis.Add(newPos);
                         }
 
                         else if (currChar == 'H')
