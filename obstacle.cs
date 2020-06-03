@@ -77,7 +77,7 @@ namespace hardestgame
             }
             pos = p;
         }
-
+/*
         public void move_3()
         {
             for (int i = 0; i < xyMov.Count; i++)
@@ -100,6 +100,6 @@ namespace hardestgame
                                 : (xyMov[i].dir == right) ? xyMov[i].velocity : 0;
                 pos[i] = xyMov[i].pos;
             }
-        }
+        } */
     }
 }

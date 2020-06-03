@@ -25,9 +25,9 @@ namespace hardestgame
         int width = 1380, height = 850;
         bool mainTimer = false;
         double playerOpacity;
-        int mapWidth = 23, mapHeight = 13;
+        int mapWidth = 23, mapHeight = 15;
         PointD checkPointPos = new PointD(0,0);
-        int coinsCollected, totalCoins, level = 1, fails = 0;
+        int coinsCollected, totalCoins, level = 6, fails = 0;
         bool pauseGame;
         bool safeZone;
         bool enemy_collision;
@@ -70,8 +70,8 @@ namespace hardestgame
             bg = new char[mapHeight,mapWidth];
             var lis = updateEnv($"./levels/{level}.txt", out List<PointD>hitPoints, out List<circleMovement> c, out List<xyMovement> xy);
             obs = new obstacle(lis, this.level, hitPoints, c, xy);
-            //p.changed += QueueDraw;
-            //obs.changed += QueueDraw;
+            p.changed += QueueDraw;
+            obs.changed += QueueDraw;
             startTimer();
             QueueDraw();
         }
@@ -174,8 +174,17 @@ namespace hardestgame
                         if (cChar.ContainsKey(currChar))
                         {
                             var t = cChar[currChar];
-                            circleMov.Add(new circleMovement(t.Item3, new PointD(pos.X + 30 + ((currChar == '>' || currChar == ')' || currChar == ']') ? CELL_WIDTH / 2
-                                                    : (currChar == '<' || currChar == '(' || currChar == '[') ? -CELL_WIDTH / 2 : 0), pos.Y + 30), 0, t.Item1, t.Item2));
+                            circleMov.Add(new circleMovement(t.Item3, new PointD(pos.X + 30 + ((currChar == '>' || currChar == ')' || currChar == ']'
+                                                    || currChar == ':') ? CELL_WIDTH / 2
+                                                    : (currChar == '<' || currChar == '(' || currChar == '[') ? -CELL_WIDTH / 2 : 0), pos.Y + 30 +
+                                                    ((currChar == '!')? CELL_HEIGHT/2 : 0)), 0, t.Item1, t.Item2));
+                            if (currChar == ';' || currChar == 'V' || currChar == '^' || currChar == '.')
+                            {
+                                PointD n = new PointD(newPos.X + ((currChar == ';' || currChar == ':' || currChar == '.') ?
+                                    CELL_WIDTH / 2 : 0), newPos.Y + ((currChar == 'V') ? CELL_HEIGHT / 2 : (currChar == '^') ? -CELL_HEIGHT / 2 : 0));
+                                circleMov.Add(new circleMovement(t.Item3, n, 0, t.Item1, t.Item2));
+                            }
+                            if (currChar == '.') circleMov.Add(new circleMovement(t.Item3, new PointD(newPos.X - CELL_HEIGHT/2, newPos.Y), 0, t.Item1, t.Item2));
                         }
                         if (xChar.Contains(currChar))
                         {
@@ -207,10 +216,10 @@ namespace hardestgame
                                 lis.Add(newPos);
 
                             }
-                            else if (currChar == ';' || currChar == 'V')
+                            else if (currChar == ';' || currChar == 'V' || currChar == '^')
                             {
                                 lis.Add(newPos);
-                                lis.Add(new PointD(newPos.X + ((currChar == ';') ? CELL_WIDTH / 2 : 0), newPos.Y + ((currChar == 'V') ? CELL_HEIGHT / 2 : 0)));
+                                lis.Add(new PointD(newPos.X + ((currChar == ';') ? CELL_WIDTH / 2 : 0), newPos.Y + ((currChar == 'V') ? CELL_HEIGHT / 2 : (currChar == '^')? -CELL_HEIGHT/2 : 0)));
                             }
                             else
                             {
@@ -218,7 +227,7 @@ namespace hardestgame
                                                     : (currChar == '<' || currChar == '(') ? -CELL_WIDTH / 2 : 0), pos.Y + 30);
                                 lis.Add(newPos);
                             }
-                            currChar = '1';
+                            currChar = (currChar!='!' && currChar!=':')? '1' : '#';
                         }
 
                         bg[i, j] = currChar;
@@ -235,6 +244,28 @@ namespace hardestgame
                             walls.Add(pos);
                             hitPoints.Add(pos);
                         }
+                    }
+                }
+                var k = circleMov;
+                while (r.ReadLine() is string s)
+                {
+                    List<string> st = s.Split().ToList();
+                    if (st[0] == "cp")
+                    {
+                        List<circleMovement> l = new List<circleMovement>();
+                        CircleDir dir = (st[1] == "(") ? CircleDir.clockwise : CircleDir.anticlockwise;
+                        double x, y,vel;
+                        double.TryParse(st[3], out x);
+                        double.TryParse(st[4], out y);
+                        double.TryParse(st[2], out vel);
+                        x = x * CELL_WIDTH + CELL_WIDTH/2;
+                        y = y * CELL_HEIGHT + CELL_HEIGHT/2;
+
+                        for (int i = 0; i < k.Count; i++)
+                        {
+                            l.Add(new circleMovement(vel, new PointD(k[i].pos.X + x - k[i].centre.X, k[i].pos.Y + y - k[i].centre.Y), 0, new PointD(x,y), dir));
+                        }
+						circleMov.AddRange(l);
                     }
                 }
             }
@@ -418,7 +449,7 @@ namespace hardestgame
             updateLevels(c, $"FAILS : {this.fails}", new PointD(1180, 15));
             updateLevels(c, $"COINS : {this.coinsCollected} / {this.totalCoins}", new PointD(700, 15));
             c.SetSourceRGB(0.1, 0.4, 0.6);
-            c.Rectangle(0, 755, width, 50);
+            c.Rectangle(0, 800, width, 50);
             c.Fill();
         }
 

@@ -1,4 +1,4 @@
-- O 6
+- O 6 A 10
 
 #######################
 #######################
@@ -9,7 +9,16 @@
 #111H11111111111OH111##
 #111HO11111111111HCCC##
 #111H11111111111OHCCC##
-H1111O1X1X1X1X111HCCC##
+H1111A1X1X1X1X111HCCC##
 #######################
 #######################
 #######################
+#######################
+#######################
+
+- 	(x movement)
+O 6	(velocity of O = 6)
+A 10	(velocity of A = 10)
+
+// When defining x movement, do not forget to \	
+   define the left-right boundaries. Use 'H' to do so 

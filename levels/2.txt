@@ -1,6 +1,7 @@
 | O 6
 
 #######################
+#######################
 #####HHHHHHHHHHHHH#####
 #####O1O1O1O1O1O1O#####
 #####1111111111111#####
@@ -13,3 +14,10 @@
 #####1O1O1O1O1O1O1#####
 #####HHHHHHHHHHHHH#####
 #######################
+#######################
+
+|	(y movement)
+O 6	(velocity of 'O' = 6)
+
+//When defining a y-movement, do not forget to include the \
+  Y boundaries of the obstacle. Do so by adding 'H' in the map
