@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Cairo;
 using static State;
 namespace hardestgame
@@ -76,24 +77,40 @@ namespace hardestgame
             public PointD pos;
             public State dir;
             public CircleDir movementType;
-            public PointD centre;
+            public PointD topLeftPos;
             public double length;
             public double breadth;
-            public squareMovement(double velocity, PointD pos, State dir, CircleDir movementType, PointD centre, double length, double breadth)
+            public squareMovement(double velocity, PointD pos, State dir, CircleDir movementType, PointD topLeftPos, double length, double breadth)
             {
                 this.velocity = velocity;
                 this.pos = pos;
                 this.dir = dir;
                 this.movementType = movementType;
-                this.centre = centre;
-                this.length = length;
-                this.breadth = breadth;
+                this.topLeftPos = topLeftPos;
+                this.length = View.CELL_WIDTH * length;
+                this.breadth = View.CELL_HEIGHT * breadth;
             }
 
             public void move()
             {
                 pos.X += (dir == left) ? -velocity : (dir == right) ? velocity : 0;
                 pos.Y += (dir == up) ? -velocity : (dir == down) ? velocity : 0;
+
+                if ((pos.X <= (topLeftPos.X + View.CELL_WIDTH / 2 + 1) && pos.Y >= topLeftPos.Y + (breadth - View.CELL_HEIGHT / 2)) ||
+                    (pos.X <= (topLeftPos.X + View.CELL_WIDTH / 2 + 1) && pos.Y <= (topLeftPos.Y + View.CELL_HEIGHT / 2 + 1)) ||
+                    (pos.X >= topLeftPos.X + (length - View.CELL_WIDTH / 2 ) && pos.Y <= (topLeftPos.Y + View.CELL_HEIGHT / 2 + 1)) ||
+                    (pos.X >= topLeftPos.X + (length - View.CELL_WIDTH / 2 ) && pos.Y >= topLeftPos.Y + (breadth - View.CELL_HEIGHT / 2)))
+                    changeDir();
+            }
+
+            void changeDir()
+            {
+                List<State> clockWiseMovements = new List<State>() {up, right, down, left};
+                List<State> antiClockWiseMovements = new List<State>() {down, right, up, left};
+                if (movementType == CircleDir.anticlockwise)
+                    dir = antiClockWiseMovements[(antiClockWiseMovements.IndexOf(dir) + 1) % 4];
+                else if (movementType == CircleDir.clockwise)
+                    dir = clockWiseMovements[(clockWiseMovements.IndexOf(dir) + 1) % 4];
             }
         }
     }

@@ -6,7 +6,7 @@ namespace hardestgame
     {
         public PointD pixPos { get; set; }
         public PointD size { get; set; }
-        public double SPEED = 5;
+        public double SPEED = 2.2;
         public bool[] canNotMove;
         const int WIDTH = 35, HEIGHT = 35;
         public bool[] dirs;

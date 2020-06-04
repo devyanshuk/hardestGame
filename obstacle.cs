@@ -15,18 +15,20 @@ namespace hardestgame
         public int size = 12;
         List<circleMovement> circleMov;
         List<xyMovement> xyMov;
+        List<squareMovement> sqMov;
         List<PointD> wallHitPoints;
 
-        public obstacle(List<PointD> pos, int lev, List<PointD> hitPt, List<circleMovement> c, List<xyMovement> xy)
+        public obstacle(List<PointD> pos, int lev, List<PointD> hitPt, List<circleMovement> c, List<xyMovement> xy, List<squareMovement> sq)
         {
             this.pos = pos;
             wallHitPoints = hitPt;
             circleMov = c;
+            sqMov = sq;
             xyMov = xy;
             for (int i = 0; i < circleMov.Count; i++)
-            {
                 circleMov[i].angle = findAngle(circleMov[i].centre, circleMov[i]);
-            }
+            for (int i = 0; i < sqMov.Count; i++)
+                sqMov[i].dir = evalDir(sqMov[i]);
         }
 
         double findAngle(PointD centre, circleMovement po)
@@ -42,6 +44,33 @@ namespace hardestgame
                 else return (Math.PI / 2 + po.angularSpeed * Math.PI / 180);
             }
             return -1;
+        }
+
+        State evalDir(squareMovement s)
+        {
+            var k = new PointD(s.topLeftPos.X + View.CELL_WIDTH / 2, s.topLeftPos.Y + View.CELL_HEIGHT / 2);
+            //Console.WriteLine($"{k.X} {s.pos.X}");
+            if (k.X == s.pos.X)
+            {
+                if (k.Y == s.pos.Y) return (s.movementType == CircleDir.clockwise) ? right : down;
+                if (k.Y + s.breadth - View.CELL_HEIGHT == s.pos.Y) return (s.movementType == CircleDir.clockwise) ? up : right;
+                return (s.movementType == CircleDir.clockwise)? up : down;
+            }
+            if (k.Y == s.pos.Y) {
+                if (k.X + s.length - View.CELL_WIDTH == s.pos.X) return (s.movementType == CircleDir.clockwise) ? down : left;
+                return (s.movementType == CircleDir.clockwise)? right : left;
+            }
+            if (k.X + s.length - View.CELL_WIDTH == s.pos.X)
+            {
+                if (k.Y + s.breadth - View.CELL_HEIGHT == s.pos.Y) return (s.movementType == CircleDir.clockwise) ? left : up;
+                return (s.movementType == CircleDir.clockwise)? down : up;
+            }
+            if (k.Y + s.breadth - View.CELL_HEIGHT == s.pos.Y)
+            {
+                //if (k.Y + s.breadth - View.CELL_HEIGHT == s.pos.Y) return (s.movementType == CircleDir.clockwise) ? left : up;
+                return (s.movementType == CircleDir.clockwise) ? left : right;
+            }
+            return left;
         }
 
         bool withinBounds(PointD po, PointD p1, double s) => (po.X >= p1.X && po.X <= p1.X + s && po.Y >= p1.Y && po.Y <= p1.Y + s);
@@ -74,31 +103,12 @@ namespace hardestgame
                 p.Add(circleMov[i].getNewPos());
                 circleMov[i].move();
             }
-            pos = p;
-        }
-
-        public void move_3()
-        {
-            for (int i = 0; i < xyMov.Count; i++)
+            for (int i = 0; i < sqMov.Count; i++)
             {
-                foreach (PointD wall in wallHitPoints)
-                {
-                    if (((xyMov[i].pos.X <= wall.X) || (xyMov[i].pos.Y >= wall.Y)) && collision(xyMov[i].pos, wall, 30))
-                    {
-                        xyMov[i].dir = (xyMov[i].dir == right) ? down
-                                       : (xyMov[i].dir == left) ? up
-                                       : (xyMov[i].dir == up) ? right
-                                       : (xyMov[i].dir == down) ? left
-                                       : xyMov[i].dir;
-                        break;
-                    }
-                }
-                xyMov[i].pos.Y += (xyMov[i].dir == up) ? -xyMov[i].velocity
-                                : (xyMov[i].dir == down) ? xyMov[i].velocity : 0;
-                xyMov[i].pos.X += (xyMov[i].dir == left) ? -xyMov[i].velocity
-                                : (xyMov[i].dir == right) ? xyMov[i].velocity : 0;
-                pos[i] = xyMov[i].pos;
+                sqMov[i].move();
+                p.Add(sqMov[i].pos);
             }
+            pos = p;
         }
     }
 }

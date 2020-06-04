@@ -14,8 +14,8 @@ namespace hardestgame
 
     public class View : window
     {
-        const int CELL_WIDTH = 60, CELL_HEIGHT = 60;
-        const uint UPDATE_TIME = 15;
+        public const int CELL_WIDTH = 60, CELL_HEIGHT = 60;
+        const uint UPDATE_TIME = 10;
         const int Y_MARGIN = 0, X_MARGIN = 0;
         Pixbuf dollar;
         Pixbuf obstacle;
@@ -29,11 +29,12 @@ namespace hardestgame
         double playerOpacity;
         int mapWidth = 23, mapHeight = 15;
         PointD checkPointPos = new PointD(0,0);
-        int coinsCollected, totalCoins, level = 7, fails = 0;
+        int coinsCollected, totalCoins, level = 3, fails = 0;
         bool pauseGame;
         bool safeZone;
         bool enemy_collision;
         Dictionary<char, Tuple<PointD, CircleDir, double>> cChar;
+        Dictionary<char, Tuple<PointD, CircleDir, double, double, double>> sqChar;
         bool roundWon;
         List<char> xChar, yChar;
         List<double> xVel, yVel;
@@ -74,6 +75,7 @@ namespace hardestgame
             xVel = new List<double>();
             yVel = new List<double>();
             cChar = new Dictionary<char, Tuple<PointD, CircleDir, double>>();
+            sqChar = new Dictionary<char, Tuple<PointD, CircleDir, double, double, double>>();
             totalCoins = 0;
             pauseGame = false;
             safeZone = false;
@@ -82,8 +84,8 @@ namespace hardestgame
             obstacle = new Pixbuf("./obs.png");
             p.dirs = new bool[4];
             bg = new char[mapHeight,mapWidth];
-            updateEnv($"./levels/{level}.txt", out List<circleMovement> c, out List<xyMovement> xy);
-            obs = new obstacle(obsList, this.level, hitPt, c, xy);
+            updateEnv($"./levels/{level}.txt", out List<circleMovement> c, out List<xyMovement> xy, out List<squareMovement> sq);
+            obs = new obstacle(obsList, this.level, hitPt, c, xy, sq);
             startTimer();
             QueueDraw();
         }
@@ -216,6 +218,26 @@ namespace hardestgame
 
                 }
 
+                else if (sp[0] == "[]")
+                {
+                    CircleDir d = (sp[1] == "(") ? CircleDir.clockwise : CircleDir.anticlockwise;
+                    double a = 0;
+                    double y = 0;
+                    double vel = 1.5;
+                    double l = 0;
+                    double b = 0;
+
+                    double.TryParse(sp[2], out vel);
+                    double.TryParse(sp[3], out a);
+                    double.TryParse(sp[4], out y);
+                    double.TryParse(sp[5], out l);
+                    double.TryParse(sp[6], out b);
+
+                    for (int j = 7; j < sp.Count; j++)
+                        if (!sqChar.ContainsKey(char.Parse(sp[j])))
+                            sqChar.Add(char.Parse(sp[j]), Tuple.Create(new PointD(a * CELL_WIDTH, y * CELL_HEIGHT), d, vel, l, b));
+                }
+
             }
         }
 
@@ -244,10 +266,11 @@ namespace hardestgame
             return l;
         }
 
-        void updateEnv(string fileName, out List<circleMovement> circleMov, out List<xyMovement> xyMov)
+        void updateEnv(string fileName, out List<circleMovement> circleMov, out List<xyMovement> xyMov, out List<squareMovement> sqMov)
         {
             circleMov = new List<circleMovement>();
             xyMov = new List<xyMovement>();
+            sqMov = new List<squareMovement>();
             using (StreamReader r = new StreamReader(fileName))
             {
                 addMovements(r);
@@ -271,7 +294,19 @@ namespace hardestgame
                                     CELL_WIDTH / 2 : 0), newPos.Y + ((ch == 'V') ? CELL_HEIGHT / 2 : (ch == '^') ? -CELL_HEIGHT / 2 : 0));
                                 circleMov.Add(new circleMovement(t.Item3, n, 0, t.Item1, t.Item2));
                             }
-                            if (ch == '.') circleMov.Add(new circleMovement(t.Item3, new PointD(newPos.X - CELL_HEIGHT/2, newPos.Y), 0, t.Item1, t.Item2));
+                            if (ch == '.') circleMov.Add(new circleMovement(t.Item3, new PointD(newPos.X - CELL_WIDTH/2, newPos.Y), 0, t.Item1, t.Item2));
+                        }
+                        if (sqChar.ContainsKey(ch))
+                        {
+                            var t = sqChar[ch];
+                            sqMov.Add(new squareMovement(t.Item3, newPos, global::State.down, t.Item2, t.Item1, t.Item4, t.Item5));
+                            if (ch == ';' || ch == 'V' || ch == '^' || ch == '.')
+                            {
+                                PointD n = new PointD(newPos.X + ((ch == ';' || ch == ':' || ch == '.') ?
+                                    CELL_WIDTH / 2 : 0), newPos.Y + ((ch == 'V') ? CELL_HEIGHT / 2 : (ch == '^') ? -CELL_HEIGHT / 2 : 0));
+                                sqMov.Add(new squareMovement(t.Item3, n, global::State.down, t.Item2, t.Item1, t.Item4, t.Item5));
+                            }
+
                         }
                         if (xChar.Contains(ch))
                         {
