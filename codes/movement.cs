@@ -23,11 +23,8 @@ namespace hardestgame
                 this.dir = dir;
             }
 
-            double dist()
-            {
-                return Math.Sqrt(Math.Abs((centre.X - pos.X) * (centre.X - pos.X)
-                                           + ((centre.Y - pos.Y) * (centre.Y - pos.Y))));
-            }
+            double dist() => Math.Sqrt(Math.Abs((centre.X - pos.X) * (centre.X - pos.X)
+                                    + ((centre.Y - pos.Y) * (centre.Y - pos.Y))));
 
             public void move()
             {
@@ -108,7 +105,7 @@ namespace hardestgame
             {
                 List<XY_DIRS> clockWiseMovements = new List<XY_DIRS>()
                                                     {up, right, down, left};
-                List<XY_DIRS> antiClockWiseMovements = new List<XY_DIRS>() 
+                List<XY_DIRS> antiClockWiseMovements = new List<XY_DIRS>()
                                                     {down, right, up, left};
                 if (movementType == anticlockwise)
                     dir = antiClockWiseMovements[(antiClockWiseMovements.IndexOf(dir) + 1) % 4];
