@@ -15,7 +15,6 @@ namespace hardestgame
             size = new PointD(WIDTH, HEIGHT);
             canNotMove = new bool[4]; //left, right. up, down
             dirs = new bool[4]; //left, right, up, down
-
         }
 
         public void changePixPos()
@@ -29,6 +28,5 @@ namespace hardestgame
             pos.Y += SPEED * y;
             pixPos = pos;
         }
-
     }
 }

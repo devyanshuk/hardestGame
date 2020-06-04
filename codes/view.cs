@@ -10,8 +10,9 @@ namespace hardestgame
     {
         public const int CELL_WIDTH = 60, CELL_HEIGHT = 60;
         public const int SCREEN_WIDTH = 1380, SCREEN_HEIGHT = 850;
-        Gdk.Color BACKGROUND_COLOR = new Gdk.Color(0, 100, 128);
         public const int Y_MARGIN = 0, X_MARGIN = 0;
+
+        Gdk.Color BACKGROUND_COLOR = new Gdk.Color(0, 100, 128);
         Gdk.Key[] DIRS = new Gdk.Key[4] { Gdk.Key.Left,
                                           Gdk.Key.Right,
                                           Gdk.Key.Up,

@@ -79,7 +79,6 @@ namespace hardestgame
                     totalCoins++;
                     coinPos.Add(newPos);
                     obsList.Add(newPos);
-
                 }
                 else if (ch == ';' || ch == 'V' || ch == '^')
                 {
@@ -107,7 +106,6 @@ namespace hardestgame
                                     (ch == '[') ? -View.CELL_WIDTH / 2 : 0), newPos.Y);
                 obsList.Add(newPos);
             }
-
             else if (ch == 'H')
             {
                 walls.Add(pos);
@@ -118,7 +116,6 @@ namespace hardestgame
         void parseSquareMovement(List<string> sp)
         {
             CIRCLE_DIRS d = (sp[1] == "(") ? clockwise : anticlockwise;
-
             double.TryParse(sp[2], out double vel);
             double.TryParse(sp[3], out double x);
             double.TryParse(sp[4], out double y);
@@ -144,7 +141,6 @@ namespace hardestgame
                     yVel.Add(v);
                 }
             }
-
         }
 
         void parseCircleMovement(List<string> sp)
