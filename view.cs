@@ -143,7 +143,7 @@ namespace hardestgame
                 else
                 {
                     newPos = new PointD(pos.X + 30 + ((ch == '>' || ch == ')') ? CELL_WIDTH / 2
-                                        : (ch == '<' || ch == '(') ? -CELL_WIDTH / 2 : 0), pos.Y + 30);
+                                : (ch == '<' || ch == '(') ? -CELL_WIDTH / 2 : 0), pos.Y + 30);
                     obsList.Add(newPos);
                 }
                 ch = (ch != '!' && ch != ':') ? '1' : 'W';
@@ -270,9 +270,9 @@ namespace hardestgame
                 var t = cChar[ch];
                 var l = new List<CircleMovement>();
                 l.Add(new CircleMovement(t.Item3, new PointD(pos.X + CELL_WIDTH / 2 +
-                                    ((ch == '>' || ch == ')' || ch == ']'	|| ch == ':') ? CELL_WIDTH / 2
-                                    : (ch == '<' || ch == '(' || ch == '[') ? -CELL_WIDTH / 2 : 0), pos.Y +
-                                    CELL_HEIGHT / 2  +	((ch == '!') ? CELL_HEIGHT / 2 : 0)), 0, t.Item1, t.Item2));
+                        ((ch == '>' || ch == ')' || ch == ']'	|| ch == ':') ? CELL_WIDTH / 2
+                        : (ch == '<' || ch == '(' || ch == '[') ? -CELL_WIDTH / 2 : 0), pos.Y +
+                        CELL_HEIGHT / 2  +	((ch == '!') ? CELL_HEIGHT / 2 : 0)), 0, t.Item1, t.Item2));
 
                 if (ch == ';' || ch == 'V' || ch == '^' || ch == '.')
                 {
@@ -281,7 +281,8 @@ namespace hardestgame
                                         CELL_HEIGHT / 2 : (ch == '^') ? -CELL_HEIGHT / 2 : 0));
                     l.Add(new CircleMovement(t.Item3, n, 0, t.Item1, t.Item2));
                 }
-                if (ch == '.') l.Add(new CircleMovement(t.Item3, new PointD(newPos.X - CELL_WIDTH / 2, newPos.Y), 0, t.Item1, t.Item2));
+                if (ch == '.') l.Add(new CircleMovement(t.Item3,
+                                    new PointD(newPos.X - CELL_WIDTH / 2, newPos.Y), 0, t.Item1, t.Item2));
                 return l;
             }
 
@@ -488,7 +489,7 @@ namespace hardestgame
                     if (bg[i, j] == '1')
                     {
                         PointD currPos = new PointD(X_MARGIN + CELL_WIDTH * j,
-													Y_MARGIN + CELL_HEIGHT * i);
+                                                    Y_MARGIN + CELL_HEIGHT * i);
                         c.MoveTo(currPos);
                         if (j % 2 == i % 2) c.SetSourceRGB(1.0, 1.0, 1.0);
                         else c.SetSourceRGB(0.6, 0.9, 0.9);
@@ -505,7 +506,7 @@ namespace hardestgame
             c.SetSourceRGB(1,1,1);
             TextExtents te = c.TextExtents(st);
             PointD mp = new PointD(10 + p.X - (te.Width / 2 + te.XBearing), 10 +
-												p.Y - (te.Height / 2 + te.YBearing));
+                                            p.Y - (te.Height / 2 + te.YBearing));
             c.MoveTo(mp);
             c.ShowText(st);
             c.Stroke();
