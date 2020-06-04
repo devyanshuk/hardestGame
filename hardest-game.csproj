@@ -16,6 +16,7 @@
     <Compile Include="player.cs" />
     <Compile Include="view.cs" />
     <Compile Include="movement.cs" />
+    <Compile Include="game.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

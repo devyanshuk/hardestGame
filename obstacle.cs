@@ -5,7 +5,7 @@ using static XY_DIRS;
 using static CIRCLE_DIRS;
 using static hardestgame.Movement;
 
-public enum XY_DIRS { up, down, left, right };
+public enum XY_DIRS { up, down, left, right }; //types of movements
 public enum CIRCLE_DIRS { clockwise, anticlockwise};
 
 namespace hardestgame
