@@ -178,7 +178,7 @@ namespace hardestgame
             for (int j = 7; j < sp.Count; j++)
                 if (!sqChar.ContainsKey(char.Parse(sp[j])))
                     sqChar.Add(char.Parse(sp[j]),
-							Tuple.Create(new PointD(x * CELL_WIDTH, y * CELL_HEIGHT), d, vel, l, b));
+                        Tuple.Create(new PointD(x * CELL_WIDTH, y * CELL_HEIGHT), d, vel, l, b));
         }
 
         void parseYMovement(List<string> sp)
@@ -270,15 +270,15 @@ namespace hardestgame
                 var t = cChar[ch];
                 var l = new List<CircleMovement>();
                 l.Add(new CircleMovement(t.Item3, new PointD(pos.X + CELL_WIDTH / 2 +
-										((ch == '>' || ch == ')' || ch == ']'	|| ch == ':') ? CELL_WIDTH / 2
-                                        : (ch == '<' || ch == '(' || ch == '[') ? -CELL_WIDTH / 2 : 0), pos.Y +
-										CELL_HEIGHT / 2  +	((ch == '!') ? CELL_HEIGHT / 2 : 0)), 0, t.Item1, t.Item2));
+                                    ((ch == '>' || ch == ')' || ch == ']'	|| ch == ':') ? CELL_WIDTH / 2
+                                    : (ch == '<' || ch == '(' || ch == '[') ? -CELL_WIDTH / 2 : 0), pos.Y +
+                                    CELL_HEIGHT / 2  +	((ch == '!') ? CELL_HEIGHT / 2 : 0)), 0, t.Item1, t.Item2));
 
                 if (ch == ';' || ch == 'V' || ch == '^' || ch == '.')
                 {
                     PointD n = new PointD(newPos.X + ((ch == ';' || ch == ':' || ch == '.') ?
-                        		CELL_WIDTH / 2 : 0), newPos.Y + ((ch == 'V') ?
-								CELL_HEIGHT / 2 : (ch == '^') ? -CELL_HEIGHT / 2 : 0));
+                                        CELL_WIDTH / 2 : 0), newPos.Y + ((ch == 'V') ?
+                                        CELL_HEIGHT / 2 : (ch == '^') ? -CELL_HEIGHT / 2 : 0));
                     l.Add(new CircleMovement(t.Item3, n, 0, t.Item1, t.Item2));
                 }
                 if (ch == '.') l.Add(new CircleMovement(t.Item3, new PointD(newPos.X - CELL_WIDTH / 2, newPos.Y), 0, t.Item1, t.Item2));
@@ -293,8 +293,8 @@ namespace hardestgame
             if (ch == ';' || ch == 'V' || ch == '^' || ch == '.')
             {
                 PointD n = new PointD(newPos.X + ((ch == ';' || ch == ':' || ch == '.') ?
-                    			CELL_WIDTH / 2 : 0), newPos.Y + ((ch == 'V') ?
-								CELL_HEIGHT / 2 : (ch == '^') ? -CELL_HEIGHT / 2 : 0));
+                                    CELL_WIDTH / 2 : 0), newPos.Y + ((ch == 'V') ?
+                                    CELL_HEIGHT / 2 : (ch == '^') ? -CELL_HEIGHT / 2 : 0));
                 l.Add(new SquareMovement(t.Item3, n, down, t.Item2, t.Item1, t.Item4, t.Item5));
             }
             return l;
