@@ -1,30 +1,28 @@
-using System;
 using Gtk;
 using Gdk;
 using Cairo;
 using System.Collections.Generic;
-using System.Linq;
-using System.IO;
 using window = Gtk.Window;
-
 
 namespace hardestgame
 {
-
     public class View : window
     {
         public const int CELL_WIDTH = 60, CELL_HEIGHT = 60;
         public const int SCREEN_WIDTH = 1380, SCREEN_HEIGHT = 850;
         Gdk.Color BACKGROUND_COLOR = new Gdk.Color(0, 100, 128);
         public const int Y_MARGIN = 0, X_MARGIN = 0;
-        Gdk.Key[] dirs = new Gdk.Key[4] { Gdk.Key.Left, Gdk.Key.Right, Gdk.Key.Up, Gdk.Key.Down };
+        Gdk.Key[] DIRS = new Gdk.Key[4] { Gdk.Key.Left,
+                                          Gdk.Key.Right,
+                                          Gdk.Key.Up,
+                                          Gdk.Key.Down
+                                        };
 
         List<double> l = new List<double>() { 0.0, 0.7, 0.0, 0.9 }; //checkPoint colour
         Pixbuf dollar, obstacle;
         public const uint UPDATE_TIME = 20;
         bool mainTimer = false;
         double playerOpacity;
-
         Game game = new Game();
 
         public View() : base("World's Hardest game")
@@ -39,7 +37,6 @@ namespace hardestgame
 
         void init()
         {
-
             game.init();
             dollar = new Pixbuf("./sprites/dollar.png");
             obstacle = new Pixbuf("./sprites/obs.png");
@@ -63,13 +60,12 @@ namespace hardestgame
                     }
                     game.insideSafeZone();
                     QueueDraw();
-                    if (game.enemy_collision || game.roundWon) makePlayerDisappear();
+                    if (game.enemy_collision || game.roundWon)
+                        makePlayerDisappear();
                     return true;
-
             });
                 mainTimer = true;
             }
-
         }
 
         void makePlayerDisappear()
@@ -83,7 +79,7 @@ namespace hardestgame
         protected override bool OnKeyPressEvent(EventKey evnt)
         {
             for(int i = 0; i < 4; i++)
-                if (evnt.Key == this.dirs[i] && !game.player.dirs[i])
+                if (evnt.Key == DIRS[i] && !game.player.dirs[i])
                     game.player.dirs[i] = true;
             return true;
 
@@ -92,7 +88,7 @@ namespace hardestgame
         protected override bool OnKeyReleaseEvent(EventKey evnt)
         {
             for (int i = 0; i < 4; i++)
-                if (evnt.Key == this.dirs[i] && game.player.dirs[i])
+                if (evnt.Key == DIRS[i] && game.player.dirs[i])
                     game.player.dirs[i] = false;
             if (!game.pauseGame && !game.roundWon) QueueDraw();
             return true;
@@ -118,7 +114,8 @@ namespace hardestgame
                 {
                     if (game.bg[i, j] == '1')
                     {
-                        PointD currPos = new PointD(X_MARGIN + CELL_WIDTH * j, Y_MARGIN + CELL_HEIGHT * i);
+                        PointD currPos = new PointD(X_MARGIN + CELL_WIDTH * j,
+                                                    Y_MARGIN + CELL_HEIGHT * i);
                         c.MoveTo(currPos);
                         if (j % 2 == i % 2) c.SetSourceRGB(1.0, 1.0, 1.0);
                         else c.SetSourceRGB(0.6, 0.9, 0.9);
@@ -134,7 +131,8 @@ namespace hardestgame
             c.SetFontSize(30);
             c.SetSourceRGB(1,1,1);
             TextExtents te = c.TextExtents(st);
-            PointD mp = new PointD(10 + p.X - (te.Width / 2 + te.XBearing), 10 + p.Y - (te.Height / 2 + te.YBearing));
+            PointD mp = new PointD(10 + p.X - (te.Width / 2 + te.XBearing),
+                                   10 + p.Y - (te.Height / 2 + te.YBearing));
             c.MoveTo(mp);
             c.ShowText(st);
             c.Stroke();
@@ -147,7 +145,8 @@ namespace hardestgame
             c.Fill();
             updateLevels(c, $"LEVEL : {game.level}", new PointD(120, 15));
             updateLevels(c, $"FAILS : {game.fails}", new PointD(1180, 15));
-            updateLevels(c, $"COINS : {game.coinsCollected} / {game.totalCoins}", new PointD(700, 15));
+            updateLevels(c, $"COINS : {game.coinsCollected} / {game.totalCoins}",
+                        new PointD(700, 15));
             c.SetSourceRGB(0.1, 0.4, 0.6);
             c.Rectangle(0, 800, SCREEN_WIDTH, 50);
             c.Fill();
@@ -168,7 +167,8 @@ namespace hardestgame
             c.SetSourceRGB(0.8, 0.6, 0.3);
             foreach (PointD pos in game.coinPos)
             {
-                CairoHelper.SetSourcePixbuf(c, dollar, pos.X - CELL_WIDTH / 4, pos.Y - CELL_HEIGHT / 4);
+                CairoHelper.SetSourcePixbuf(c, dollar, pos.X - CELL_WIDTH / 4,
+                                            pos.Y - CELL_HEIGHT / 4);
                 c.Paint();
             }
         }
@@ -177,7 +177,8 @@ namespace hardestgame
         {
             foreach (PointD pos in game.obs.pos)
             {
-                CairoHelper.SetSourcePixbuf(c, obstacle, pos.X - CELL_WIDTH / 4, pos.Y - CELL_HEIGHT / 4);
+                CairoHelper.SetSourcePixbuf(c, obstacle, pos.X - CELL_WIDTH / 4,
+                                            pos.Y - CELL_HEIGHT / 4);
                 c.Paint();
             }
         }
