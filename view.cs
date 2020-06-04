@@ -177,7 +177,8 @@ namespace hardestgame
 
             for (int j = 7; j < sp.Count; j++)
                 if (!sqChar.ContainsKey(char.Parse(sp[j])))
-                    sqChar.Add(char.Parse(sp[j]), Tuple.Create(new PointD(x * CELL_WIDTH, y * CELL_HEIGHT), d, vel, l, b));
+                    sqChar.Add(char.Parse(sp[j]),
+							Tuple.Create(new PointD(x * CELL_WIDTH, y * CELL_HEIGHT), d, vel, l, b));
         }
 
         void parseYMovement(List<string> sp)
@@ -257,9 +258,8 @@ namespace hardestgame
                     y = y * CELL_HEIGHT + CELL_HEIGHT / 2;
 
                     for (int i = 0; i < k.Count; i++)
-                    {
-                        l.Add(new CircleMovement(vel, new PointD(k[i].pos.X + x - k[i].centre.X, k[i].pos.Y + y - k[i].centre.Y), 0, new PointD(x, y), dir));
-                    }
+                        l.Add(new CircleMovement(vel, new PointD(k[i].pos.X + x - k[i].centre.X,
+								k[i].pos.Y + y - k[i].centre.Y), 0, new PointD(x, y), dir));
                 }
             }
             return l;
@@ -269,14 +269,16 @@ namespace hardestgame
             {
                 var t = cChar[ch];
                 var l = new List<CircleMovement>();
-                l.Add(new CircleMovement(t.Item3, new PointD(pos.X + CELL_WIDTH / 2 + ((ch == '>' || ch == ')' || ch == ']'
-                                        || ch == ':') ? CELL_WIDTH / 2
-                                        : (ch == '<' || ch == '(' || ch == '[') ? -CELL_WIDTH / 2 : 0), pos.Y + CELL_HEIGHT / 2  +
-                                        ((ch == '!') ? CELL_HEIGHT / 2 : 0)), 0, t.Item1, t.Item2));
+                l.Add(new CircleMovement(t.Item3, new PointD(pos.X + CELL_WIDTH / 2 +
+										((ch == '>' || ch == ')' || ch == ']'	|| ch == ':') ? CELL_WIDTH / 2
+                                        : (ch == '<' || ch == '(' || ch == '[') ? -CELL_WIDTH / 2 : 0), pos.Y +
+										CELL_HEIGHT / 2  +	((ch == '!') ? CELL_HEIGHT / 2 : 0)), 0, t.Item1, t.Item2));
+
                 if (ch == ';' || ch == 'V' || ch == '^' || ch == '.')
                 {
                     PointD n = new PointD(newPos.X + ((ch == ';' || ch == ':' || ch == '.') ?
-                        CELL_WIDTH / 2 : 0), newPos.Y + ((ch == 'V') ? CELL_HEIGHT / 2 : (ch == '^') ? -CELL_HEIGHT / 2 : 0));
+                        		CELL_WIDTH / 2 : 0), newPos.Y + ((ch == 'V') ?
+								CELL_HEIGHT / 2 : (ch == '^') ? -CELL_HEIGHT / 2 : 0));
                     l.Add(new CircleMovement(t.Item3, n, 0, t.Item1, t.Item2));
                 }
                 if (ch == '.') l.Add(new CircleMovement(t.Item3, new PointD(newPos.X - CELL_WIDTH / 2, newPos.Y), 0, t.Item1, t.Item2));
@@ -291,7 +293,8 @@ namespace hardestgame
             if (ch == ';' || ch == 'V' || ch == '^' || ch == '.')
             {
                 PointD n = new PointD(newPos.X + ((ch == ';' || ch == ':' || ch == '.') ?
-                    CELL_WIDTH / 2 : 0), newPos.Y + ((ch == 'V') ? CELL_HEIGHT / 2 : (ch == '^') ? -CELL_HEIGHT / 2 : 0));
+                    			CELL_WIDTH / 2 : 0), newPos.Y + ((ch == 'V') ?
+								CELL_HEIGHT / 2 : (ch == '^') ? -CELL_HEIGHT / 2 : 0));
                 l.Add(new SquareMovement(t.Item3, n, down, t.Item2, t.Item1, t.Item4, t.Item5));
             }
             return l;
@@ -484,7 +487,8 @@ namespace hardestgame
                 {
                     if (bg[i, j] == '1')
                     {
-                        PointD currPos = new PointD(X_MARGIN + CELL_WIDTH * j, Y_MARGIN + CELL_HEIGHT * i);
+                        PointD currPos = new PointD(X_MARGIN + CELL_WIDTH * j,
+													Y_MARGIN + CELL_HEIGHT * i);
                         c.MoveTo(currPos);
                         if (j % 2 == i % 2) c.SetSourceRGB(1.0, 1.0, 1.0);
                         else c.SetSourceRGB(0.6, 0.9, 0.9);
@@ -500,7 +504,8 @@ namespace hardestgame
             c.SetFontSize(30);
             c.SetSourceRGB(1,1,1);
             TextExtents te = c.TextExtents(st);
-            PointD mp = new PointD(10 + p.X - (te.Width / 2 + te.XBearing), 10 + p.Y - (te.Height / 2 + te.YBearing));
+            PointD mp = new PointD(10 + p.X - (te.Width / 2 + te.XBearing), 10 +
+												p.Y - (te.Height / 2 + te.YBearing));
             c.MoveTo(mp);
             c.ShowText(st);
             c.Stroke();
