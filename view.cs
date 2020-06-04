@@ -81,7 +81,8 @@ namespace hardestgame
             obstacle = new Pixbuf("./sprites/obs.png");
             p.dirs = new bool[4];
             bg = new char[MAP_HEIGHT, MAP_WIDTH];
-            updateEnv($"./levels/{level}.txt", out List<CircleMovement> c, out List<XyMovement> xy, out List<SquareMovement> sq);
+            updateEnv($"./levels/{level}.txt", out List<CircleMovement> c, out List<XyMovement> xy,
+                      out List<SquareMovement> sq);
             obs = new Obstacle(obsList, this.level, hitPt, c, xy, sq);
             startTimer();
             QueueDraw();
@@ -259,7 +260,7 @@ namespace hardestgame
 
                     for (int i = 0; i < k.Count; i++)
                         l.Add(new CircleMovement(vel, new PointD(k[i].pos.X + x - k[i].centre.X,
-								k[i].pos.Y + y - k[i].centre.Y), 0, new PointD(x, y), dir));
+                                k[i].pos.Y + y - k[i].centre.Y), 0, new PointD(x, y), dir));
                 }
             }
             return l;
@@ -272,7 +273,7 @@ namespace hardestgame
                 l.Add(new CircleMovement(t.Item3, new PointD(pos.X + CELL_WIDTH / 2 +
                         ((ch == '>' || ch == ')' || ch == ']'	|| ch == ':') ? CELL_WIDTH / 2
                         : (ch == '<' || ch == '(' || ch == '[') ? -CELL_WIDTH / 2 : 0), pos.Y +
-                        CELL_HEIGHT / 2  +	((ch == '!') ? CELL_HEIGHT / 2 : 0)), 0, t.Item1, t.Item2));
+                        CELL_HEIGHT / 2 + ((ch == '!') ? CELL_HEIGHT / 2 : 0)), 0, t.Item1, t.Item2));
 
                 if (ch == ';' || ch == 'V' || ch == '^' || ch == '.')
                 {
