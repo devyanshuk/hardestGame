@@ -1,24 +1,25 @@
 using System;
 using Cairo;
 using System.Collections.Generic;
-using static State;
-using static hardestgame.movement;
+using static XY_DIRS;
+using static CIRCLE_DIRS;
+using static hardestgame.Movement;
 
-public enum State { up, down, left, right }; //types of movements
-public enum CircleDir { clockwise, anticlockwise};
+public enum XY_DIRS { up, down, left, right };
+public enum CIRCLE_DIRS { clockwise, anticlockwise};
 
 namespace hardestgame
 {
-    public class obstacle
+    public class Obstacle
     {
         public List<PointD> pos;
-        public int size = 12;
-        List<circleMovement> circleMov;
-        List<xyMovement> xyMov;
-        List<squareMovement> sqMov;
+        public const int RADIUS = 12;
+        List<CircleMovement> circleMov;
+        List<XyMovement> xyMov;
+        List<SquareMovement> sqMov;
         List<PointD> wallHitPoints;
 
-        public obstacle(List<PointD> pos, int lev, List<PointD> hitPt, List<circleMovement> c, List<xyMovement> xy, List<squareMovement> sq)
+        public Obstacle(List<PointD> pos, int lev, List<PointD> hitPt, List<CircleMovement> c, List<XyMovement> xy, List<SquareMovement> sq)
         {
             this.pos = pos;
             wallHitPoints = hitPt;
@@ -31,7 +32,7 @@ namespace hardestgame
                 sqMov[i].dir = evalDir(sqMov[i]);
         }
 
-        double findAngle(PointD centre, circleMovement po)
+        double findAngle(PointD centre, CircleMovement po)
         {
             if (po.pos.Y == centre.Y)
             {
@@ -46,30 +47,30 @@ namespace hardestgame
             return -1;
         }
 
-        State evalDir(squareMovement s)
+        XY_DIRS evalDir(SquareMovement s)
         {
             var k = new PointD(s.topLeftPos.X + View.CELL_WIDTH / 2, s.topLeftPos.Y + View.CELL_HEIGHT / 2);
-            //Console.WriteLine($"{k.X} {s.pos.X}");
             if (k.X == s.pos.X)
             {
-                if (k.Y == s.pos.Y) return (s.movementType == CircleDir.clockwise) ? right : down;
-                if (k.Y + s.breadth - View.CELL_HEIGHT == s.pos.Y) return (s.movementType == CircleDir.clockwise) ? up : right;
-                return (s.movementType == CircleDir.clockwise)? up : down;
+                if (k.Y == s.pos.Y)
+                    return (s.movementType == clockwise) ? right : down;
+                if (k.Y + s.breadth - View.CELL_HEIGHT == s.pos.Y)
+                    return (s.movementType == clockwise) ? up : right;
+                return (s.movementType == clockwise)? up : down;
             }
             if (k.Y == s.pos.Y) {
-                if (k.X + s.length - View.CELL_WIDTH == s.pos.X) return (s.movementType == CircleDir.clockwise) ? down : left;
-                return (s.movementType == CircleDir.clockwise)? right : left;
+                if (k.X + s.length - View.CELL_WIDTH == s.pos.X)
+                    return (s.movementType == clockwise) ? down : left;
+                return (s.movementType == clockwise)? right : left;
             }
             if (k.X + s.length - View.CELL_WIDTH == s.pos.X)
             {
-                if (k.Y + s.breadth - View.CELL_HEIGHT == s.pos.Y) return (s.movementType == CircleDir.clockwise) ? left : up;
-                return (s.movementType == CircleDir.clockwise)? down : up;
+                if (k.Y + s.breadth - View.CELL_HEIGHT == s.pos.Y)
+                    return (s.movementType == clockwise) ? left : up;
+                return (s.movementType == clockwise)? down : up;
             }
             if (k.Y + s.breadth - View.CELL_HEIGHT == s.pos.Y)
-            {
-                //if (k.Y + s.breadth - View.CELL_HEIGHT == s.pos.Y) return (s.movementType == CircleDir.clockwise) ? left : up;
-                return (s.movementType == CircleDir.clockwise) ? left : right;
-            }
+                return (s.movementType == clockwise) ? left : right;
             return left;
         }
 
@@ -77,10 +78,10 @@ namespace hardestgame
 
         bool collision(PointD po, PointD wall, double s)
         {
-            var l = new PointD(po.X - 3.5 * size, po.Y);
-            var r = new PointD(po.X + size, po.Y);
-            var d = new PointD(po.X, po.Y + size);
-            var u = new PointD(po.X, po.Y - 3.5 * size);
+            var l = new PointD(po.X - 3.5 * RADIUS, po.Y);
+            var r = new PointD(po.X + RADIUS, po.Y);
+            var d = new PointD(po.X, po.Y + RADIUS);
+            var u = new PointD(po.X, po.Y - 3.5 * RADIUS);
             if (withinBounds(l, wall, s) || withinBounds(r, wall, s) || withinBounds(d, wall, s) || withinBounds(u, wall, s))
                 return true;
             return false;
