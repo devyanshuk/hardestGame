@@ -3,11 +3,12 @@ namespace hardestgame
 {
     public class Player
     {
+        public double SPEED = 4;
+        const int WIDTH = 35, HEIGHT = 35;
+
         public PointD pixPos { get; set; }
         public PointD size { get; set; }
-        public double SPEED = 4;
         public bool[] canNotMove;
-        const int WIDTH = 35, HEIGHT = 35;
         public bool[] dirs;
 
         public Player()

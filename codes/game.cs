@@ -12,10 +12,11 @@ namespace hardestgame
     public class Game
     {
         public const int MAP_WIDTH = 23, MAP_HEIGHT = 15;
+
         public Player player;
         public Obstacle obs;
         public PointD checkPointPos = new PointD(0, 0);
-        public int coinsCollected, totalCoins, level = 7, fails = 0;
+        public int coinsCollected, totalCoins, level = 9, fails = 0;
         public List<PointD> walls, checkPoint, coinPos;
         public bool pauseGame, safeZone, enemy_collision, roundWon;
         public char[,] bg;

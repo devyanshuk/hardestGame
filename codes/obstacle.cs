@@ -12,8 +12,9 @@ namespace hardestgame
 {
     public class Obstacle
     {
-        public List<PointD> pos;
         public const int RADIUS = 12;
+
+        public List<PointD> pos;
         List<CircleMovement> circleMov;
         List<XyMovement> xyMov;
         List<SquareMovement> sqMov;
@@ -101,7 +102,7 @@ namespace hardestgame
             for (int i = 0; i < xyMov.Count; i++)
             {
                 foreach (PointD wall in wallHitPoints)
-                    if (collision(xyMov[i].pos, wall, 30))
+                    if (collision(xyMov[i].pos, wall, View.CELL_WIDTH / 2))
                         xyMov[i].changeDir();
                 xyMov[i].move();
                 p.Add(xyMov[i].pos);
