@@ -33,15 +33,9 @@ namespace hardestgame
             {
                 double newAngle = angularSpeed * Math.PI / 180;
                 angle += (dir == clockwise) ? newAngle : -newAngle;
-            }
-
-            public PointD getNewPos()
-            {
                 double distance = dist();
-                double currAngle = angle;
-                double x = centre.X + distance * Math.Cos(currAngle);
-                double y = centre.Y + distance * Math.Sin(currAngle);
-                return new PointD(x, y);
+                pos.X = centre.X + distance * Math.Cos(angle);
+                pos.Y = centre.Y + distance * Math.Sin(angle);
             }
         }
 
@@ -81,7 +75,9 @@ namespace hardestgame
             public PointD topLeftPos;
             public double length;
             public double breadth;
-            public SquareMovement(double velocity, PointD pos, XY_DIRS dir, CIRCLE_DIRS movementType, PointD topLeftPos, double length, double breadth)
+            public SquareMovement(double velocity, PointD pos, XY_DIRS dir,
+                                  CIRCLE_DIRS movementType, PointD topLeftPos,
+                                  double length, double breadth)
             {
                 this.velocity = velocity;
                 this.pos = pos;
@@ -110,8 +106,10 @@ namespace hardestgame
 
             void changeDir()
             {
-                List<XY_DIRS> clockWiseMovements = new List<XY_DIRS>() {up, right, down, left};
-                List<XY_DIRS> antiClockWiseMovements = new List<XY_DIRS>() {down, right, up, left};
+                List<XY_DIRS> clockWiseMovements = new List<XY_DIRS>()
+                                                    {up, right, down, left};
+                List<XY_DIRS> antiClockWiseMovements = new List<XY_DIRS>() 
+                                                    {down, right, up, left};
                 if (movementType == anticlockwise)
                     dir = antiClockWiseMovements[(antiClockWiseMovements.IndexOf(dir) + 1) % 4];
                 else if (movementType == clockwise)

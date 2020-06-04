@@ -19,7 +19,8 @@ namespace hardestgame
         List<SquareMovement> sqMov;
         List<PointD> wallHitPoints;
 
-        public Obstacle(List<PointD> pos, int lev, List<PointD> hitPt, List<CircleMovement> c, List<XyMovement> xy, List<SquareMovement> sq)
+        public Obstacle(List<PointD> pos, int lev, List<PointD> hitPt,
+            List<CircleMovement> c, List<XyMovement> xy, List<SquareMovement> sq)
         {
             this.pos = pos;
             wallHitPoints = hitPt;
@@ -41,7 +42,8 @@ namespace hardestgame
             }
             if (po.pos.X == centre.X)
             {
-                if (po.pos.Y < centre.Y) return (270 * Math.PI / 180 + po.angularSpeed * Math.PI / 180);
+                if (po.pos.Y < centre.Y) return (270 * Math.PI / 180 +
+                                                po.angularSpeed * Math.PI / 180);
                 else return (Math.PI / 2 + po.angularSpeed * Math.PI / 180);
             }
             return -1;
@@ -49,7 +51,8 @@ namespace hardestgame
 
         XY_DIRS evalDir(SquareMovement s)
         {
-            var k = new PointD(s.topLeftPos.X + View.CELL_WIDTH / 2, s.topLeftPos.Y + View.CELL_HEIGHT / 2);
+            var k = new PointD(s.topLeftPos.X + View.CELL_WIDTH / 2,
+                                s.topLeftPos.Y + View.CELL_HEIGHT / 2);
             if (k.X == s.pos.X)
             {
                 if (k.Y == s.pos.Y)
@@ -74,7 +77,10 @@ namespace hardestgame
             return left;
         }
 
-        bool withinBounds(PointD po, PointD p1, double s) => (po.X >= p1.X && po.X <= p1.X + s && po.Y >= p1.Y && po.Y <= p1.Y + s);
+        bool withinBounds(PointD po, PointD p1, double s) => (po.X >= p1.X &&
+                                                             po.X <= p1.X + s &&
+                                                             po.Y >= p1.Y &&
+                                                             po.Y <= p1.Y + s);
 
         bool collision(PointD po, PointD wall, double s)
         {
@@ -82,7 +88,8 @@ namespace hardestgame
             var r = new PointD(po.X + RADIUS, po.Y);
             var d = new PointD(po.X, po.Y + RADIUS);
             var u = new PointD(po.X, po.Y - 3.5 * RADIUS);
-            if (withinBounds(l, wall, s) || withinBounds(r, wall, s) || withinBounds(d, wall, s) || withinBounds(u, wall, s))
+            if (withinBounds(l, wall, s) || withinBounds(r, wall, s) ||
+            withinBounds(d, wall, s) || withinBounds(u, wall, s))
                 return true;
             return false;
         }
@@ -101,7 +108,7 @@ namespace hardestgame
             }
             for (int i = 0; i < circleMov.Count; i++)
             {
-                p.Add(circleMov[i].getNewPos());
+                p.Add(circleMov[i].pos);
                 circleMov[i].move();
             }
             for (int i = 0; i < sqMov.Count; i++)
