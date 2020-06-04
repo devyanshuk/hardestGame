@@ -15,8 +15,10 @@ namespace hardestgame
     public class View : window
     {
         const int CELL_WIDTH = 60, CELL_HEIGHT = 60;
-        int yMargin = 0, xMargin = 0;
+        const uint UPDATE_TIME = 15;
+        const int Y_MARGIN = 0, X_MARGIN = 0;
         Pixbuf dollar;
+        Pixbuf obstacle;
         char[,] bg;
         List<PointD> walls;
         Player p;
@@ -27,12 +29,16 @@ namespace hardestgame
         double playerOpacity;
         int mapWidth = 23, mapHeight = 15;
         PointD checkPointPos = new PointD(0,0);
-        int coinsCollected, totalCoins, level = 6, fails = 0;
+        int coinsCollected, totalCoins, level = 7, fails = 0;
         bool pauseGame;
         bool safeZone;
         bool enemy_collision;
+        Dictionary<char, Tuple<PointD, CircleDir, double>> cChar;
         bool roundWon;
-        int circRad = 10;
+        List<char> xChar, yChar;
+        List<double> xVel, yVel;
+        List<PointD> obsList;
+        List<PointD> hitPt;
         List<double> l = new List<double>() { 0.0, 0.7, 0.0, 0.9 }; //checkPoint colour
         Gdk.Key[] dirs = new Gdk.Key[4] {Gdk.Key.Left, Gdk.Key.Right, Gdk.Key.Up, Gdk.Key.Down };
         List<PointD> coinPos;
@@ -52,6 +58,8 @@ namespace hardestgame
             walls = new List<PointD>();
             coinPos = new List<PointD>();
             checkPoint = new List<PointD>();
+            hitPt = new List<PointD>();
+            obsList = new List<PointD>();
             playerOpacity = 1;
             if (roundWon && (coinsCollected == totalCoins && totalCoins != 0))
             {
@@ -61,17 +69,21 @@ namespace hardestgame
             coinsCollected = 0;
             enemy_collision = false;
             roundWon = false;
+            xChar = new List<char>();
+            yChar = new List<char>();
+            xVel = new List<double>();
+            yVel = new List<double>();
+            cChar = new Dictionary<char, Tuple<PointD, CircleDir, double>>();
             totalCoins = 0;
             pauseGame = false;
             safeZone = false;
             p = new Player();
             dollar = new Pixbuf("./dollar.png");
+            obstacle = new Pixbuf("./obs.png");
             p.dirs = new bool[4];
             bg = new char[mapHeight,mapWidth];
-            var lis = updateEnv($"./levels/{level}.txt", out List<PointD>hitPoints, out List<circleMovement> c, out List<xyMovement> xy);
-            obs = new obstacle(lis, this.level, hitPoints, c, xy);
-            p.changed += QueueDraw;
-            obs.changed += QueueDraw;
+            updateEnv($"./levels/{level}.txt", out List<circleMovement> c, out List<xyMovement> xy);
+            obs = new obstacle(obsList, this.level, hitPt, c, xy);
             startTimer();
             QueueDraw();
         }
@@ -80,7 +92,7 @@ namespace hardestgame
         {
             if (!mainTimer)
             {
-                GLib.Timeout.Add(10, delegate
+                GLib.Timeout.Add(UPDATE_TIME, delegate
                 {
                     if (!enemy_collision)
                     {
@@ -101,182 +113,189 @@ namespace hardestgame
 
         }
 
-        List<PointD> updateEnv(string fileName, out List<PointD> hitPoints, out List<circleMovement> circleMov, out List<xyMovement> xyMov)
+        void _updateEnv(char ch, PointD pos, PointD newPos, int i, int j)
         {
-            List<PointD> lis = new List<PointD>();
-            circleMov = new List<circleMovement>();
-            Dictionary<char, Tuple<PointD, CircleDir, double>> cChar = new Dictionary<char, Tuple<PointD, CircleDir, double>>();
-            List<char> xChar = new List<char>();
-            List<char> yChar = new List<char>();
-            List<double> xVel = new List<double>();
-            List<double> yVel = new List<double>();
-            xyMov = new List<xyMovement>();
-            hitPoints = new List<PointD>();
-            using (StreamReader r = new StreamReader(fileName))
+            if (ch != '1' && ch != '#' && ch != 'W' && ch != ']' && ch != '[' && ch != 'H')
             {
-                while (r.ReadLine() is string s)
+                if (ch == 'P')
                 {
-                    List<string> sp = s.Split().ToList();
-                    if (sp.Count <= 0 || s == "") break;
+                    p.pixPos = (checkPointPos.X != 0 && checkPointPos.Y != 0) ? checkPointPos : pos;
+                    checkPoint.Add(pos);
+                }
+                else if (ch == 'C') checkPoint.Add(pos);
+                else if (ch == 'X')
+                {
+                    totalCoins++;
+                    coinPos.Add(newPos);
+                }
+                else if (ch == '2')
+                {
+                    totalCoins++;
+                    coinPos.Add(newPos);
+                    obsList.Add(newPos);
 
-                    if (sp[0] == "()")
-                    {
-                        double x = 0;
-                        double y = 0;
-                        double vel = 1.4;
-                        CircleDir dir = (sp[1] == "(") ? CircleDir.clockwise : CircleDir.anticlockwise;
-                        double.TryParse(sp[2], out vel);
-                        double.TryParse(sp[3], out x);
-                        double.TryParse(sp[4], out y);
+                }
+                else if (ch == ';' || ch == 'V' || ch == '^')
+                {
+                    obsList.Add(newPos);
+                    obsList.Add(new PointD(newPos.X + ((ch == ';') ? CELL_WIDTH / 2 : 0), newPos.Y + ((ch == 'V') ? CELL_HEIGHT / 2 : (ch == '^') ? -CELL_HEIGHT / 2 : 0)));
+                }
+                else
+                {
+                    newPos = new PointD(pos.X + 30 + ((ch == '>' || ch == ')') ? CELL_WIDTH / 2
+                                        : (ch == '<' || ch == '(') ? -CELL_WIDTH / 2 : 0), pos.Y + 30);
+                    obsList.Add(newPos);
+                }
+                ch = (ch != '!' && ch != ':') ? '1' : 'W';
+            }
 
-                        PointD centre = new PointD(x * CELL_WIDTH + CELL_WIDTH / 2 , y * CELL_HEIGHT + CELL_HEIGHT / 2);
-                        for (int j = 5; j < sp.Count; j++)
-                            if (!cChar.ContainsKey(char.Parse(sp[j])))
-                                cChar.Add(char.Parse(sp[j]), Tuple.Create(centre, dir, vel));
-                    }
-                    else if (sp[0] == "-")
+            bg[i, j] = ch;
+            if (ch == 'W') walls.Add(pos);
+            else if (ch == '[' || ch == ']')
+            {
+                walls.Add(pos);
+                newPos = new PointD(newPos.X + ((ch == ']') ? CELL_WIDTH / 2 : (ch == '[') ? -CELL_WIDTH / 2 : 0), newPos.Y);
+                obsList.Add(newPos);
+            }
+
+            else if (ch == 'H')
+            {
+                walls.Add(pos);
+                hitPt.Add(pos);
+            }
+        }
+
+        void addMovements(StreamReader r)
+        {
+            while (r.ReadLine() is string s)
+            {
+                List<string> sp = s.Split().ToList();
+                if (sp.Count <= 0 || s == "") break;
+
+                if (sp[0] == "()")
+                {
+                    double x = 0;
+                    double y = 0;
+                    double vel = 1.4;
+                    CircleDir dir = (sp[1] == "(") ? CircleDir.clockwise : CircleDir.anticlockwise;
+                    double.TryParse(sp[2], out vel);
+                    double.TryParse(sp[3], out x);
+                    double.TryParse(sp[4], out y);
+
+                    PointD centre = new PointD(x * CELL_WIDTH + CELL_WIDTH / 2, y * CELL_HEIGHT + CELL_HEIGHT / 2);
+                    for (int j = 5; j < sp.Count; j++)
+                        if (!cChar.ContainsKey(char.Parse(sp[j])))
+                            cChar.Add(char.Parse(sp[j]), Tuple.Create(centre, dir, vel));
+                }
+                else if (sp[0] == "-")
+                {
+                    for (int j = 1; j < sp.Count; j++)
                     {
-                        for (int j = 1; j < sp.Count; j++)
+                        if (j % 2 == 1)
+                            xChar.Add(char.Parse(sp[j]));
+                        else
                         {
-                            if (j % 2 == 1)
-                                xChar.Add(char.Parse(sp[j]));
-                            else
-                            {
-                                double.TryParse(sp[j], out double v);
-                                xVel.Add(v);
-                            }
-
+                            double.TryParse(sp[j], out double v);
+                            xVel.Add(v);
                         }
+
                     }
-                    else if (sp[0] == "|")
+                }
+                else if (sp[0] == "|")
+                {
+                    for (int j = 1; j < sp.Count; j++)
                     {
-                        for (int j = 1; j < sp.Count; j++)
+                        if (j % 2 == 1)
+                            yChar.Add(char.Parse(sp[j]));
+                        else
                         {
-                            if (j % 2 == 1)
-                                yChar.Add(char.Parse(sp[j]));
-                            else
-                            {
-                                double.TryParse(sp[j], out double v);
-                                yVel.Add(v);
-                            }
+                            double.TryParse(sp[j], out double v);
+                            yVel.Add(v);
                         }
-
                     }
 
                 }
+
+            }
+        }
+
+        List<circleMovement> copyCircleMovements(StreamReader r, List<circleMovement> k)
+        {
+            var l = new List<circleMovement>();
+            while (r.ReadLine() is string s)
+            {
+                List<string> st = s.Split().ToList();
+                if (st[0] == "cp")
+                {
+                    CircleDir dir = (st[1] == "(") ? CircleDir.clockwise : CircleDir.anticlockwise;
+                    double x, y, vel;
+                    double.TryParse(st[3], out x);
+                    double.TryParse(st[4], out y);
+                    double.TryParse(st[2], out vel);
+                    x = x * CELL_WIDTH + CELL_WIDTH / 2;
+                    y = y * CELL_HEIGHT + CELL_HEIGHT / 2;
+
+                    for (int i = 0; i < k.Count; i++)
+                    {
+                        l.Add(new circleMovement(vel, new PointD(k[i].pos.X + x - k[i].centre.X, k[i].pos.Y + y - k[i].centre.Y), 0, new PointD(x, y), dir));
+                    }
+                }
+            }
+            return l;
+        }
+
+        void updateEnv(string fileName, out List<circleMovement> circleMov, out List<xyMovement> xyMov)
+        {
+            circleMov = new List<circleMovement>();
+            xyMov = new List<xyMovement>();
+            using (StreamReader r = new StreamReader(fileName))
+            {
+                addMovements(r);
                 for(int i = 0; i < mapHeight; i++)
                 {
                     string s = r.ReadLine();
                     for (int j = 0; j < mapWidth; j++) {
-                        char currChar = s[j];
-                        PointD pos = new PointD(xMargin + CELL_WIDTH * j, yMargin + CELL_HEIGHT * i);
+                        char ch = s[j];
+                        PointD pos = new PointD(X_MARGIN + CELL_WIDTH * j, Y_MARGIN + CELL_HEIGHT * i);
                         PointD newPos = new PointD(pos.X + CELL_WIDTH/2, pos.Y + CELL_HEIGHT/2);
-                        if (cChar.ContainsKey(currChar))
+                        if (cChar.ContainsKey(ch))
                         {
-                            var t = cChar[currChar];
-                            circleMov.Add(new circleMovement(t.Item3, new PointD(pos.X + 30 + ((currChar == '>' || currChar == ')' || currChar == ']'
-                                                    || currChar == ':') ? CELL_WIDTH / 2
-                                                    : (currChar == '<' || currChar == '(' || currChar == '[') ? -CELL_WIDTH / 2 : 0), pos.Y + 30 +
-                                                    ((currChar == '!')? CELL_HEIGHT/2 : 0)), 0, t.Item1, t.Item2));
-                            if (currChar == ';' || currChar == 'V' || currChar == '^' || currChar == '.')
+                            var t = cChar[ch];
+                            circleMov.Add(new circleMovement(t.Item3, new PointD(pos.X + 30 + ((ch == '>' || ch == ')' || ch == ']'
+                                                    || ch == ':') ? CELL_WIDTH / 2
+                                                    : (ch == '<' || ch == '(' || ch == '[') ? -CELL_WIDTH / 2 : 0), pos.Y + 30 +
+                                                    ((ch == '!')? CELL_HEIGHT/2 : 0)), 0, t.Item1, t.Item2));
+                            if (ch == ';' || ch == 'V' || ch == '^' || ch == '.')
                             {
-                                PointD n = new PointD(newPos.X + ((currChar == ';' || currChar == ':' || currChar == '.') ?
-                                    CELL_WIDTH / 2 : 0), newPos.Y + ((currChar == 'V') ? CELL_HEIGHT / 2 : (currChar == '^') ? -CELL_HEIGHT / 2 : 0));
+                                PointD n = new PointD(newPos.X + ((ch == ';' || ch == ':' || ch == '.') ?
+                                    CELL_WIDTH / 2 : 0), newPos.Y + ((ch == 'V') ? CELL_HEIGHT / 2 : (ch == '^') ? -CELL_HEIGHT / 2 : 0));
                                 circleMov.Add(new circleMovement(t.Item3, n, 0, t.Item1, t.Item2));
                             }
-                            if (currChar == '.') circleMov.Add(new circleMovement(t.Item3, new PointD(newPos.X - CELL_HEIGHT/2, newPos.Y), 0, t.Item1, t.Item2));
+                            if (ch == '.') circleMov.Add(new circleMovement(t.Item3, new PointD(newPos.X - CELL_HEIGHT/2, newPos.Y), 0, t.Item1, t.Item2));
                         }
-                        if (xChar.Contains(currChar))
+                        if (xChar.Contains(ch))
                         {
-                            int index = xChar.IndexOf(currChar);
+                            int index = xChar.IndexOf(ch);
                             xyMov.Add(new xyMovement(xVel[index], newPos, global::State.left));
                         }
-                        if (yChar.Contains(currChar))
+                        if (yChar.Contains(ch))
                         {
-                            int index = yChar.IndexOf(currChar);
+                            int index = yChar.IndexOf(ch);
                             xyMov.Add(new xyMovement(yVel[index], newPos, global::State.up));
                         }
-                        if (currChar != '1' && currChar != '#' && currChar != ']' && currChar != '[' && currChar!= 'H')
-                        {
-                            if (currChar == 'P')
-                            {
-                                p.pixPos = (checkPointPos.X != 0 && checkPointPos.Y != 0) ? checkPointPos : pos;
-                                checkPoint.Add(pos);
-                            }
-                            else if (currChar == 'C') checkPoint.Add(pos);
-                            else if (currChar == 'X')
-                            {
-                                totalCoins++;
-                                coinPos.Add(newPos);
-                            }
-                            else if (currChar == '2')
-                            {
-                                totalCoins++;
-                                coinPos.Add(newPos);
-                                lis.Add(newPos);
-
-                            }
-                            else if (currChar == ';' || currChar == 'V' || currChar == '^')
-                            {
-                                lis.Add(newPos);
-                                lis.Add(new PointD(newPos.X + ((currChar == ';') ? CELL_WIDTH / 2 : 0), newPos.Y + ((currChar == 'V') ? CELL_HEIGHT / 2 : (currChar == '^')? -CELL_HEIGHT/2 : 0)));
-                            }
-                            else
-                            {
-                                newPos = new PointD(pos.X + 30 + ((currChar == '>' || currChar == ')') ? CELL_WIDTH / 2
-                                                    : (currChar == '<' || currChar == '(') ? -CELL_WIDTH / 2 : 0), pos.Y + 30);
-                                lis.Add(newPos);
-                            }
-                            currChar = (currChar!='!' && currChar!=':')? '1' : '#';
-                        }
-
-                        bg[i, j] = currChar;
-                        if (currChar == '#') walls.Add(pos);
-                        else if (currChar == '[' || currChar == ']')
-                        {
-                            walls.Add(pos);
-                            newPos = new PointD(newPos.X + ((currChar == ']') ? CELL_WIDTH / 2 : (currChar == '[') ? -CELL_WIDTH / 2 : 0), newPos.Y);
-                            lis.Add(newPos);
-                        }
-
-                        else if (currChar == 'H')
-                        {
-                            walls.Add(pos);
-                            hitPoints.Add(pos);
-                        }
+                        _updateEnv(ch, pos, newPos, i, j);
                     }
                 }
                 var k = circleMov;
-                while (r.ReadLine() is string s)
-                {
-                    List<string> st = s.Split().ToList();
-                    if (st[0] == "cp")
-                    {
-                        List<circleMovement> l = new List<circleMovement>();
-                        CircleDir dir = (st[1] == "(") ? CircleDir.clockwise : CircleDir.anticlockwise;
-                        double x, y,vel;
-                        double.TryParse(st[3], out x);
-                        double.TryParse(st[4], out y);
-                        double.TryParse(st[2], out vel);
-                        x = x * CELL_WIDTH + CELL_WIDTH/2;
-                        y = y * CELL_HEIGHT + CELL_HEIGHT/2;
-
-                        for (int i = 0; i < k.Count; i++)
-                        {
-                            l.Add(new circleMovement(vel, new PointD(k[i].pos.X + x - k[i].centre.X, k[i].pos.Y + y - k[i].centre.Y), 0, new PointD(x,y), dir));
-                        }
-						circleMov.AddRange(l);
-                    }
-                }
+                circleMov.AddRange(copyCircleMovements(r, k));
             }
-            return lis;
         }
 
         void checkForCoins()
         {
             foreach (PointD pos in coinPos)
             {
-                if (collision(pos, circRad))
+                if (collision(pos, obs.size))
                 {
                     coinsCollected++;
                     coinPos.Remove(pos);
@@ -289,7 +308,7 @@ namespace hardestgame
         void wallCollision()
         {
             PointD pPos = new PointD(p.pixPos.X + p.size.X / 2, p.pixPos.Y + p.size.Y / 2);
-            double[] hitPoints = new double[4] { pPos.X - p.speed - p.size.X / 2, pPos.X + p.speed + p.size.X / 2, pPos.Y - p.speed - p.size.Y / 2, pPos.Y + p.speed + p.size.Y / 2 };
+            double[] hitPoints = new double[4] { pPos.X - p.SPEED - p.size.X / 2, pPos.X + p.SPEED + p.size.X / 2, pPos.Y - p.SPEED - p.size.Y / 2, pPos.Y + p.SPEED + p.size.Y / 2 };
             bool[] canNotMove = new bool[4]; //left, right, up, down
             foreach (PointD wall in walls)
             {
@@ -329,7 +348,7 @@ namespace hardestgame
         void makePlayerDisappear()
         {
             if (!roundWon) p.dirs = new bool[4];
-                playerOpacity -= 0.02;
+                playerOpacity -= 0.05;
                 if (playerOpacity <= 0.0)
                 {
                     init();
@@ -418,7 +437,7 @@ namespace hardestgame
                 {
                     if (bg[i, j] == '1')
                     {
-                        PointD currPos = new PointD(xMargin + CELL_WIDTH * j, yMargin + CELL_HEIGHT * i);
+                        PointD currPos = new PointD(X_MARGIN + CELL_WIDTH * j, Y_MARGIN + CELL_HEIGHT * i);
                         c.MoveTo(currPos);
                         if (j % 2 == i % 2) c.SetSourceRGB(1.0, 1.0, 1.0);
                         else c.SetSourceRGB(0.6, 0.9, 0.9);
@@ -468,21 +487,17 @@ namespace hardestgame
             c.SetSourceRGB(0.8, 0.6, 0.3);
             foreach (PointD pos in coinPos)
             {
-                CairoHelper.SetSourcePixbuf(c, dollar, pos.X - 15, pos.Y - 15);
+                CairoHelper.SetSourcePixbuf(c, dollar, pos.X - CELL_WIDTH / 4, pos.Y - CELL_HEIGHT / 4);
                 c.Paint();
             }
         }
 
         void drawObstacles(Context c)
         {
-            foreach(PointD pos in obs.pos)
+            foreach (PointD pos in obs.pos)
             {
-                c.SetSourceRGB(0, 0, 0);
-                c.Arc(pos.X, pos.Y, obs.size, 0, 2 * Math.PI);
-                c.Fill();
-                c.SetSourceRGB(0, 0, 1);
-                c.Arc(pos.X, pos.Y, obs.size - 3, 0, 2 * Math.PI);
-                c.Fill();
+                CairoHelper.SetSourcePixbuf(c, obstacle, pos.X - CELL_WIDTH / 4, pos.Y - CELL_HEIGHT / 4);
+                c.Paint();
             }
         }
 
@@ -490,19 +505,13 @@ namespace hardestgame
         {
             using (Context c = CairoHelper.Create(GdkWindow))
             {
-                c.SetSourceRGB(0.0, 0.5, 0.5);
-                c.Rectangle(0, 0, width, height);
-                c.Fill();
+                ModifyBg(StateType.Normal, new Gdk.Color(0, 100, 128));
                 drawMap(c);
                 drawCheckPoints(c);
                 drawCoins(c);
                 updateScoreAndLives(c);
                 drawObstacles(c);
                 drawPlayer(c);
-                //c.SetSourceRGB(1, 0, 0);
-                //c.Arc(11 * 60 + 60, 6 * 60 + 30, 12, 0, 2 * Math.PI);
-                //c.Fill();
-
             }
             p.canNotMove = new bool[4];
             return true;

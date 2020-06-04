@@ -70,5 +70,31 @@ namespace hardestgame
             }
         }
 
+        public class squareMovement
+        {
+            public double velocity;
+            public PointD pos;
+            public State dir;
+            public CircleDir movementType;
+            public PointD centre;
+            public double length;
+            public double breadth;
+            public squareMovement(double velocity, PointD pos, State dir, CircleDir movementType, PointD centre, double length, double breadth)
+            {
+                this.velocity = velocity;
+                this.pos = pos;
+                this.dir = dir;
+                this.movementType = movementType;
+                this.centre = centre;
+                this.length = length;
+                this.breadth = breadth;
+            }
+
+            public void move()
+            {
+                pos.X += (dir == left) ? -velocity : (dir == right) ? velocity : 0;
+                pos.Y += (dir == up) ? -velocity : (dir == down) ? velocity : 0;
+            }
+        }
     }
 }

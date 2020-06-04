@@ -13,7 +13,6 @@ namespace hardestgame
     {
         public List<PointD> pos;
         public int size = 12;
-        public event Notify changed;
         List<circleMovement> circleMov;
         List<xyMovement> xyMov;
         List<PointD> wallHitPoints;
@@ -77,7 +76,7 @@ namespace hardestgame
             }
             pos = p;
         }
-/*
+
         public void move_3()
         {
             for (int i = 0; i < xyMov.Count; i++)
@@ -100,6 +99,6 @@ namespace hardestgame
                                 : (xyMov[i].dir == right) ? xyMov[i].velocity : 0;
                 pos[i] = xyMov[i].pos;
             }
-        } */
+        }
     }
 }
