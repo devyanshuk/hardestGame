@@ -302,12 +302,12 @@ namespace hardestgame
             return l;
         }
 
-        void updateEnv(string fileName, out List<CircleMovement> circleMov, out List<XyMovement> xyMov, out List<SquareMovement> sqMov)
+        void updateEnv(string fn, out List<CircleMovement> circleMov, out List<XyMovement> xyMov, out List<SquareMovement> sqMov)
         {
             circleMov = new List<CircleMovement>();
             xyMov = new List<XyMovement>();
             sqMov = new List<SquareMovement>();
-            using (StreamReader r = new StreamReader(fileName))
+            using (StreamReader r = new StreamReader(fn))
             {
                 parseMovements(r);
                 for(int i = 0; i < MAP_HEIGHT; i++)
