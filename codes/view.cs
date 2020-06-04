@@ -163,22 +163,11 @@ namespace hardestgame
              }
         }
 
-        void drawCoins(Context c)
+        void drawSprite(Context c, Pixbuf p, List<PointD> lis)
         {
-            c.SetSourceRGB(0.8, 0.6, 0.3);
-            foreach (PointD pos in game.coinPos)
+            foreach (PointD pos in lis)
             {
-                CairoHelper.SetSourcePixbuf(c, dollar, pos.X - CELL_WIDTH / 4,
-                                            pos.Y - CELL_HEIGHT / 4);
-                c.Paint();
-            }
-        }
-
-        void drawObstacles(Context c)
-        {
-            foreach (PointD pos in game.obs.pos)
-            {
-                CairoHelper.SetSourcePixbuf(c, obstacle, pos.X - CELL_WIDTH / 4,
+                CairoHelper.SetSourcePixbuf(c, p, pos.X - CELL_WIDTH / 4,
                                             pos.Y - CELL_HEIGHT / 4);
                 c.Paint();
             }
@@ -191,9 +180,9 @@ namespace hardestgame
                 ModifyBg(StateType.Normal, BACKGROUND_COLOR);
                 drawMap(c);
                 drawCheckPoints(c);
-                drawCoins(c);
+                drawSprite(c, dollar, game.coinPos);
                 updateScoreAndLives(c);
-                drawObstacles(c);
+                drawSprite(c, obstacle, game.obs.pos);
                 drawPlayer(c);
             }
             game.player.canNotMove = new bool[4];
