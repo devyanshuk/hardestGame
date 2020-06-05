@@ -5,10 +5,8 @@ using Cairo;
 using System.Collections.Generic;
 using window = Gtk.Window;
 
-
 namespace hardestgame
 {
-
     public class View : window
     {
         public const uint UPDATE_TIME = 20;
@@ -75,7 +73,6 @@ namespace hardestgame
             });
                 mainTimer = true;
             }
-
         }
 
         void makePlayerDisappear()
@@ -168,21 +165,11 @@ namespace hardestgame
              }
         }
 
-        void drawCoins(Context c)
+        void drawSprite(Context c, List<PointD> lis, Pixbuf p)
         {
-            c.SetSourceRGB(0.8, 0.6, 0.3);
-            foreach (PointD pos in game.coinPos)
+            foreach (PointD pos in lis)
             {
-                CairoHelper.SetSourcePixbuf(c, dollar, pos.X - CELL_WIDTH / 4, pos.Y - CELL_HEIGHT / 4);
-                c.Paint();
-            }
-        }
-
-        void drawObstacles(Context c)
-        {
-            foreach (PointD pos in game.obs.pos)
-            {
-                CairoHelper.SetSourcePixbuf(c, obstacle, pos.X - CELL_WIDTH / 4, pos.Y - CELL_HEIGHT / 4);
+                CairoHelper.SetSourcePixbuf(c, p, pos.X - CELL_WIDTH / 4, pos.Y - CELL_HEIGHT / 4);
                 c.Paint();
             }
         }
@@ -193,9 +180,9 @@ namespace hardestgame
             {
                 drawMap(c);
                 drawCheckPoints(c);
-                drawCoins(c);
+                drawSprite(c, game.coinPos, dollar);
                 updateScoreAndLives(c);
-                drawObstacles(c);
+                drawSprite(c, game.obs.pos, obstacle);
                 drawPlayer(c);
                 CairoHelper.SetSourcePixbuf(c, musicOff, 1300, 800);
                 c.Paint();
