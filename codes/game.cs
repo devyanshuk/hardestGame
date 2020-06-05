@@ -15,7 +15,7 @@ namespace hardestgame
         public Player player;
         public Obstacle obs;
         public PointD checkPointPos = new PointD(0, 0);
-        public int coinsCollected, totalCoins, level = 9, fails = 0;
+        public int coinsCollected = 0, totalCoins, level = 8, fails = 0;
         public List<PointD> walls, checkPoint;
         public List<PointD> coinPos = new List<PointD>();
         public bool pauseGame, safeZone, enemy_collision, roundWon;
@@ -45,11 +45,11 @@ namespace hardestgame
                 level++;
                 checkPointPos = new PointD(0,0);
                 coinPos = new List<PointD>();
+                totalCoins = 0;
+                coinsCollected = 0;
             }
-            coinsCollected = 0;
             enemy_collision = false;
             roundWon = false;
-            totalCoins = 0;
             pauseGame = false;
             safeZone = false;
             bg = new char[MAP_HEIGHT, MAP_WIDTH];
