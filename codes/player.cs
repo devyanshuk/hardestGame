@@ -3,19 +3,20 @@ namespace hardestgame
 {
     public class Player
     {
-        public double SPEED = 4;
-        const int WIDTH = 35, HEIGHT = 35;
-
         public PointD pixPos { get; set; }
         public PointD size { get; set; }
+        public double speed;
         public bool[] canNotMove;
+        const int WIDTH = 35, HEIGHT = 35;
         public bool[] dirs;
 
-        public Player()
+        public Player(double speed)
         {
             size = new PointD(WIDTH, HEIGHT);
             canNotMove = new bool[4]; //left, right. up, down
             dirs = new bool[4]; //left, right, up, down
+            this.speed = speed;
+
         }
 
         public void changePixPos()
@@ -25,9 +26,10 @@ namespace hardestgame
             bool a = canNotMove[0], b = canNotMove[1], c = canNotMove[2], d = canNotMove[3];
             y = (dirs[2] && !c) ? -1 : (dirs[3] && !d)? 1 : 0;
             x = (dirs[0] && !a)? -1 : (dirs[1] && !b) ? 1 : 0;
-            pos.X += SPEED * x;
-            pos.Y += SPEED * y;
+            pos.X += speed * x;
+            pos.Y += speed * y;
             pixPos = pos;
         }
+
     }
 }

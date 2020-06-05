@@ -1,3 +1,4 @@
+PLAYER SPEED = 4
 () ( 2.4 8 3 O V ; ! : .
 
 ######WW!WWWWWWWWWWWWW#

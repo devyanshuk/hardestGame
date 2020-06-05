@@ -12,12 +12,12 @@ namespace hardestgame
     public class Game
     {
         public const int MAP_WIDTH = 23, MAP_HEIGHT = 15;
-
         public Player player;
         public Obstacle obs;
         public PointD checkPointPos = new PointD(0, 0);
         public int coinsCollected, totalCoins, level = 9, fails = 0;
-        public List<PointD> walls, checkPoint, coinPos;
+        public List<PointD> walls, checkPoint;
+        public List<PointD> coinPos = new List<PointD>();
         public bool pauseGame, safeZone, enemy_collision, roundWon;
         public char[,] bg;
         Dictionary<char, Tuple<PointD, CIRCLE_DIRS, double>> cChar;
@@ -29,10 +29,9 @@ namespace hardestgame
         public void init()
         {
             walls = new List<PointD>();
-            coinPos = new List<PointD>();
-            checkPoint = new List<PointD>();
             hitPt = new List<PointD>();
             obsList = new List<PointD>();
+            checkPoint = new List<PointD>();
 
             xChar = new List<char>();
             yChar = new List<char>();
@@ -44,7 +43,8 @@ namespace hardestgame
             if (roundWon && (coinsCollected == totalCoins && totalCoins != 0))
             {
                 level++;
-                checkPointPos = new PointD(0, 0);
+                checkPointPos = new PointD(0,0);
+                coinPos = new List<PointD>();
             }
             coinsCollected = 0;
             enemy_collision = false;
@@ -52,9 +52,9 @@ namespace hardestgame
             totalCoins = 0;
             pauseGame = false;
             safeZone = false;
-            player = new Player();
-            player.dirs = new bool[4];
             bg = new char[MAP_HEIGHT, MAP_WIDTH];
+            player = new Player(2.5);
+            player.dirs = new bool[4];
             updateEnv($"./levels/{this.level}.txt", out List<CircleMovement> c,
                       out List<XyMovement> xy, out List<SquareMovement> sq);
             obs = new Obstacle(obsList, this.level, hitPt, c, xy, sq);
@@ -70,16 +70,20 @@ namespace hardestgame
                     checkPoint.Add(pos);
                 }
                 else if (ch == 'C') checkPoint.Add(pos);
-                else if (ch == 'X')
+                else if (checkPointPos.X == 0 && checkPointPos.Y == 0 && ch == 'X')
                 {
                     totalCoins++;
                     coinPos.Add(newPos);
                 }
                 else if (ch == '2')
                 {
-                    totalCoins++;
-                    coinPos.Add(newPos);
+                    if (checkPointPos.X == 0 && checkPointPos.Y == 0)
+                    {
+                        totalCoins++;
+                        coinPos.Add(newPos);
+                    }
                     obsList.Add(newPos);
+
                 }
                 else if (ch == ';' || ch == 'V' || ch == '^')
                 {
@@ -107,6 +111,7 @@ namespace hardestgame
                                     (ch == '[') ? -View.CELL_WIDTH / 2 : 0), newPos.Y);
                 obsList.Add(newPos);
             }
+
             else if (ch == 'H')
             {
                 walls.Add(pos);
@@ -117,6 +122,7 @@ namespace hardestgame
         void parseSquareMovement(List<string> sp)
         {
             CIRCLE_DIRS d = (sp[1] == "(") ? clockwise : anticlockwise;
+
             double.TryParse(sp[2], out double vel);
             double.TryParse(sp[3], out double x);
             double.TryParse(sp[4], out double y);
@@ -142,6 +148,7 @@ namespace hardestgame
                     yVel.Add(v);
                 }
             }
+
         }
 
         void parseCircleMovement(List<string> sp)
@@ -257,13 +264,15 @@ namespace hardestgame
             return l;
         }
 
-        public void updateEnv(string fileName, out List<CircleMovement> circleMov, out List<XyMovement> xyMov, out List<SquareMovement> sqMov)
+        public void updateEnv(string fileName, out List<CircleMovement> circleMov,
+                             out List<XyMovement> xyMov, out List<SquareMovement> sqMov)
         {
             circleMov = new List<CircleMovement>();
             xyMov = new List<XyMovement>();
             sqMov = new List<SquareMovement>();
             using (StreamReader r = new StreamReader(fileName))
             {
+                double.TryParse(r.ReadLine().Split()[3], out player.speed);
                 parseMovements(r);
                 for (int i = 0; i < MAP_HEIGHT; i++)
                 {
@@ -317,10 +326,10 @@ namespace hardestgame
         {
             PointD pPos = new PointD(player.pixPos.X + player.size.X / 2,
                                      player.pixPos.Y + player.size.Y / 2);
-            double[] hitPoints = new double[4] { pPos.X - player.SPEED - player.size.X / 2,
-                                                pPos.X + player.SPEED + player.size.X / 2,
-                                                pPos.Y - player.SPEED - player.size.Y / 2,
-                                                pPos.Y + player.SPEED + player.size.Y / 2 };
+            double[] hitPoints = new double[4] { pPos.X - player.speed - player.size.X / 2,
+                                                pPos.X + player.speed + player.size.X / 2,
+                                                pPos.Y - player.speed - player.size.Y / 2,
+                                                pPos.Y + player.speed + player.size.Y / 2 };
             bool[] canNotMove = new bool[4]; //left, right, up, down
             foreach (PointD wall in walls)
             {
