@@ -1,5 +1,6 @@
 using Gtk;
-//using System.Media;
+using System;
+using System.Media;
 using Gdk;
 using Cairo;
 using System.Collections.Generic;
@@ -14,12 +15,19 @@ namespace hardestgame
         public const int SCREEN_WIDTH = 1380, SCREEN_HEIGHT = 850;
         Gdk.Color BACKGROUND_COLOR = new Gdk.Color(0, 100, 128);
         public const int Y_MARGIN = 0, X_MARGIN = 0;
-        Gdk.Key[] DIRS = new Gdk.Key[4] { Gdk.Key.Left, Gdk.Key.Right, Gdk.Key.Up, Gdk.Key.Down };
+        Gdk.Key[] DIRS = new Gdk.Key[4] { Gdk.Key.Left,
+                                          Gdk.Key.Right,
+                                          Gdk.Key.Up,
+                                          Gdk.Key.Down
+                                        };
+        const int MUSIC_ICON_X = 1300, MUSIC_ICON_Y = 800,
+                  MUSIC_ICON_WIDTH = 48, MUSIC_ICON_HEIGHT = 48;
 
-        List<double> l = new List<double>() { 0.0, 0.7, 0.0, 0.9 }; //checkPoint colour
+        List<double> l = new List<double>() { 0.0, 0.7, 0.0, 0.9 }; //checkPoint color
         Pixbuf dollar, obstacle, musicOn, musicOff;
-        //SoundPlayer music;
+        SoundPlayer music;
         bool mainTimer = false, playMusic = true;
+        PointD mouseLocation;
         double playerOpacity;
 
         Game game = new Game();
@@ -29,6 +37,7 @@ namespace hardestgame
             AddEvents((int)(EventMask.ButtonPressMask |
                      EventMask.ButtonReleaseMask |
                      EventMask.KeyPressMask |
+                     EventMask.ButtonPressMask |
                      EventMask.PointerMotionMask));
             Resize(SCREEN_WIDTH, SCREEN_HEIGHT);
             ModifyBg(StateType.Normal, BACKGROUND_COLOR);
@@ -38,16 +47,16 @@ namespace hardestgame
 
         void init()
         {
-                //music = new SoundPlayer();
-                game.init();
-                dollar = new Pixbuf("./sprites/dollar.png");
-                obstacle = new Pixbuf("./sprites/obs.png");
-                musicOn = new Pixbuf("./music/music_on.png");
-                musicOff = new Pixbuf("./music/music_off.png");
-                //music.SoundLocation = "./music/music.wav";
-                //music.Load();
-                playerOpacity = 1;
-                //music.PlayLooping();
+            music = new SoundPlayer();
+            game.init();
+            dollar = new Pixbuf("./sprites/dollar.png");
+            obstacle = new Pixbuf("./sprites/obs.png");
+            musicOn = new Pixbuf("./music/music_on.png");
+            musicOff = new Pixbuf("./music/music_off.png");
+            music.SoundLocation = "./music/music.wav";
+            music.Load();
+            playerOpacity = 1;
+            music.PlayLooping();
         }
 
 
@@ -60,17 +69,19 @@ namespace hardestgame
                     if (!game.enemy_collision)
                     {
                         game.obs.move(game.level);
-                        if (!game.safeZone) game.enemyCollision();
+                        if (!game.safeZone)
+                            game.enemyCollision();
                         game.wallCollision();
                         game.checkForCoins();
                         game.player.changePixPos();
                     }
                     game.insideSafeZone();
                     QueueDraw();
-                    if (game.enemy_collision || game.roundWon) makePlayerDisappear();
+                    if (game.enemy_collision || game.roundWon)
+                        makePlayerDisappear();
                     return true;
 
-            });
+                });
                 mainTimer = true;
             }
         }
@@ -78,13 +89,13 @@ namespace hardestgame
         void makePlayerDisappear()
         {
             playerOpacity -= 0.03;
-                if (playerOpacity <= 0.0)
-                    init();
-          }
+            if (playerOpacity <= 0.0)
+                init();
+        }
 
         protected override bool OnKeyPressEvent(EventKey evnt)
         {
-            for(int i = 0; i < 4; i++)
+            for (int i = 0; i < 4; i++)
                 if (evnt.Key == DIRS[i] && !game.player.dirs[i])
                     game.player.dirs[i] = true;
             return true;
@@ -100,7 +111,22 @@ namespace hardestgame
             return true;
         }
 
-        void drawPlayer(Context c)
+        protected override bool OnMotionNotifyEvent(EventMotion evnt)
+        {
+            mouseLocation = new PointD(evnt.X, evnt.Y);
+            return true;
+        }
+
+        protected override bool OnButtonPressEvent(EventButton evnt)
+        {
+            double a = mouseLocation.X, b = mouseLocation.Y;
+            if (a >= MUSIC_ICON_X && a <= MUSIC_ICON_X + MUSIC_ICON_WIDTH &&
+                b >= MUSIC_ICON_Y && b <= MUSIC_ICON_Y + MUSIC_ICON_HEIGHT)
+                playMusic = !playMusic;
+            return true;
+        }
+
+            void drawPlayer(Context c)
         {
             c.SetSourceRGBA(0.0, 0.0, 0.0, playerOpacity);
             c.Rectangle(game.player.pixPos.X, game.player.pixPos.Y,
@@ -108,7 +134,7 @@ namespace hardestgame
             c.Fill();
             c.SetSourceRGBA(1.0, 0.0, 0.0, playerOpacity);
             c.Rectangle(game.player.pixPos.X + 3, game.player.pixPos.Y + 3,
-                       game.player.size.X - 6, game.player.size.Y - 6 );
+                       game.player.size.X - 6, game.player.size.Y - 6);
             c.Fill();
         }
 
@@ -120,7 +146,8 @@ namespace hardestgame
                 {
                     if (game.bg[i, j] == '1')
                     {
-                        PointD currPos = new PointD(X_MARGIN + CELL_WIDTH * j, Y_MARGIN + CELL_HEIGHT * i);
+                        PointD currPos = new PointD(X_MARGIN + CELL_WIDTH * j,
+                                                    Y_MARGIN + CELL_HEIGHT * i);
                         c.MoveTo(currPos);
                         if (j % 2 == i % 2) c.SetSourceRGB(1.0, 1.0, 1.0);
                         else c.SetSourceRGB(0.6, 0.9, 0.9);
@@ -134,9 +161,10 @@ namespace hardestgame
         void updateLevels(Context c, string st, PointD p)
         {
             c.SetFontSize(30);
-            c.SetSourceRGB(1,1,1);
+            c.SetSourceRGB(1, 1, 1);
             TextExtents te = c.TextExtents(st);
-            PointD mp = new PointD(10 + p.X - (te.Width / 2 + te.XBearing), 10 + p.Y - (te.Height / 2 + te.YBearing));
+            PointD mp = new PointD(10 + p.X - (te.Width / 2 + te.XBearing),
+                                    10 + p.Y - (te.Height / 2 + te.YBearing));
             c.MoveTo(mp);
             c.ShowText(st);
             c.Stroke();
@@ -144,12 +172,13 @@ namespace hardestgame
 
         void updateScoreAndLives(Context c)
         {
-            c.SetSourceRGB(0.1,0.4,0.6);
+            c.SetSourceRGB(0.1, 0.4, 0.6);
             c.Rectangle(0, 0, SCREEN_WIDTH, 50);
             c.Fill();
             updateLevels(c, $"LEVEL : {game.level}", new PointD(120, 15));
             updateLevels(c, $"FAILS : {game.fails}", new PointD(1180, 15));
-            updateLevels(c, $"COINS : {game.coinsCollected} / {game.totalCoins}", new PointD(700, 15));
+            updateLevels(c, $"COINS : {game.coinsCollected} / {game.totalCoins}",
+                         new PointD(700, 15));
             c.SetSourceRGB(0.1, 0.4, 0.6);
             c.Rectangle(0, 800, SCREEN_WIDTH, 50);
             c.Fill();
@@ -162,7 +191,7 @@ namespace hardestgame
             {
                 c.Rectangle(pos.X, pos.Y, CELL_WIDTH, CELL_HEIGHT);
                 c.Fill();
-             }
+            }
         }
 
         void drawSprite(Context c, List<PointD> lis, Pixbuf p)
@@ -172,6 +201,13 @@ namespace hardestgame
                 CairoHelper.SetSourcePixbuf(c, p, pos.X - CELL_WIDTH / 4, pos.Y - CELL_HEIGHT / 4);
                 c.Paint();
             }
+        }
+
+        void drawMusicIcon(Context c)
+        {
+            Pixbuf p = playMusic ? musicOn : musicOff;
+            CairoHelper.SetSourcePixbuf(c, p, MUSIC_ICON_X, MUSIC_ICON_Y);
+            c.Paint();
         }
 
         protected override bool OnExposeEvent(EventExpose evnt)
@@ -184,8 +220,7 @@ namespace hardestgame
                 updateScoreAndLives(c);
                 drawSprite(c, game.obs.pos, obstacle);
                 drawPlayer(c);
-                CairoHelper.SetSourcePixbuf(c, musicOff, 1300, 800);
-                c.Paint();
+                drawMusicIcon(c);
             }
             game.player.canNotMove = new bool[4];
             return true;
