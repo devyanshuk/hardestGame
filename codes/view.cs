@@ -50,8 +50,8 @@ namespace hardestgame
             game.init();
             dollar = new Pixbuf("./sprites/dollar.png");
             obstacle = new Pixbuf("./sprites/obs.png");
-            musicOn = new Pixbuf("./sprites/music_on.png");
-            musicOff = new Pixbuf("./sprites/music_off.png");
+            musicOn = new Pixbuf("./music/music_on.png");
+            musicOff = new Pixbuf("./music/music_off.png");
             //music.SoundLocation = "../../ffmusic.wav";
             //music.Load();
             playerOpacity = 1;
@@ -185,20 +185,20 @@ namespace hardestgame
 
         void animateCheckPoint(CheckPoints k)
         {
-            if (k.increaseOpacity)
+            if (k.decrease)
             {
                 k.l[1] -= 0.01;
-                if (k.l[1] <= 0.45)
+                if (k.l[1] <= 0.4)
                 {
-                    k.increaseOpacity = false;
-                    k.decreaseOpacity = true;
+                    k.decrease = false;
+                    k.increase = true;
                 }
             }
-            else if (k.decreaseOpacity)
+            else if (k.increase)
             {
                 k.l[1] += 0.01;
                 if (k.l[1] >= k.green)
-                    k.decreaseOpacity = false;
+                    k.increase = false;
             }
         }
 

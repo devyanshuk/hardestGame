@@ -23,8 +23,8 @@ namespace hardestgame
         public double red = 0.0;
         public double green = 0.7;
         public double blue = 0.0;
-        public double opacity = 0.9;
-        public bool beingAnimated, increaseOpacity, decreaseOpacity;
+        public double opacity = 0.5;
+        public bool beingAnimated, increase, decrease;
         public List<double> l;
         public CheckPoints(PointD topLeftPos, double length, double height)
         {
@@ -32,7 +32,7 @@ namespace hardestgame
             this.length = length;
             this.height = height;
             adjustPos();
-            beingAnimated = increaseOpacity = decreaseOpacity = false;
+            beingAnimated = increase = decrease = false;
             l = new List<double> {red, green, blue, opacity };
         }
     }

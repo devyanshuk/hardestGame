@@ -15,7 +15,7 @@ namespace hardestgame
         public Player player;
         public Obstacle obs;
         public PointD checkPointPos = new PointD(0, 0);
-        public int coinsCollected = 0, totalCoins = 0, level = 8, fails = 0;
+        public int coinsCollected = 0, totalCoins = 0, level = 1, fails = 0;
         public List<PointD> walls;
         public List<CheckPoints> checkPoint;
         public List<PointD> coinPos = new List<PointD>();
@@ -403,24 +403,30 @@ namespace hardestgame
             }
         }
 
+        bool checkPointColl(CheckPoints c, PointD p)
+        {
+            return (p.X >= c.topLeftPos.X &&
+                    p.X <= c.topLeftPos.X + c.length &&
+                    p.Y >= c.topLeftPos.Y &&
+                    p.Y <= c.topLeftPos.Y + c.height);
+        }
+
         public void insideSafeZone()
         {
             bool changed = false;
             if (!roundWon)
             {
-                //safeZone = false;
                 foreach (var c in checkPoint)
                 {
-                    if (player.pixPos.X >= c.topLeftPos.X &&
-                        player.pixPos.X <= c.topLeftPos.X + c.length &&
-                        player.pixPos.Y >= c.topLeftPos.Y &&
-                        player.pixPos.Y <= c.topLeftPos.Y + c.height)
+                    if (checkPointColl(c, player.pixPos) &&
+                        checkPointColl(c, new PointD(player.pixPos.X + player.size.X,
+                                        player.pixPos.Y + player.size.Y)))
                     {
                         checkPointPos = c.topLeftPos;
                         safeZone = true;
                         changed = true;
                         if (coinCollected.Count >= 1)
-                            c.beingAnimated = c.increaseOpacity = true;
+                            c.beingAnimated = c.decrease = true;
                         coinCollected.Clear();
                         if (!enemy_collision && coinsCollected == totalCoins &&
                             totalCoins != 0)
@@ -430,7 +436,6 @@ namespace hardestgame
                         }
                     }
                 }
-                //Console.WriteLine(coinCollected.Count);
                 if (changed)
                     return;
                 safeZone = false;
