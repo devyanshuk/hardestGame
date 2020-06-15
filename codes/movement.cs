@@ -24,8 +24,7 @@ namespace hardestgame
             }
 
             double dist() => Math.Sqrt(Math.Abs((centre.X - pos.X) * (centre.X - pos.X)
-                                    + ((centre.Y - pos.Y) * (centre.Y - pos.Y))));
-
+                                           + ((centre.Y - pos.Y) * (centre.Y - pos.Y))));
             public void move()
             {
                 double newAngle = angularSpeed * Math.PI / 180;
@@ -63,51 +62,49 @@ namespace hardestgame
             }
         }
 
-        public class SquareMovement
-       {
-           List<XY_DIRS> MOVEMENTS = new List<XY_DIRS>()
-                                           {up, right, down, left};
-           public double velocity;
-           public PointD pos;
-           public XY_DIRS dir;
-           public CIRCLE_DIRS movementType;
-           public PointD topLeftPos;
-           public double length;
-           public double breadth;
-           public SquareMovement(double velocity, PointD pos, XY_DIRS dir, CIRCLE_DIRS movementType, PointD topLeftPos, double length, double breadth)
-           {
-               this.velocity = velocity;
-               this.pos = pos;
-               this.dir = dir;
-               this.movementType = movementType;
-               this.topLeftPos = topLeftPos;
-               this.length = View.CELL_WIDTH * length;
-               this.breadth = View.CELL_HEIGHT * breadth;
-           }
+        public class SquareMovement : Square
+        {
+            List<XY_DIRS> MOVEMENTS = new List<XY_DIRS>()
+                                            {up, right, down, left};
+            public double velocity;
+            public PointD pos;
+            public XY_DIRS dir;
+            public CIRCLE_DIRS movementType;
+            public SquareMovement(double velocity, PointD pos, XY_DIRS dir, CIRCLE_DIRS movementType, PointD topLeftPos, double length, double breadth)
+            {
+                this.velocity = velocity;
+                this.pos = pos;
+                this.dir = dir;
+                this.movementType = movementType;
+                this.topLeftPos = topLeftPos;
+                this.length = length;
+                this.height = breadth;
+                adjustPos();
+            }
 
-           bool timeToChangeDir() => ((pos.X <= (topLeftPos.X + View.CELL_WIDTH / 2 + 1) &&
-                                       pos.Y >= topLeftPos.Y + (breadth - View.CELL_HEIGHT / 2)) ||
-                                       (pos.X <= (topLeftPos.X + View.CELL_WIDTH / 2 + 1) &&
-                                       pos.Y <= (topLeftPos.Y + View.CELL_HEIGHT / 2 + 1)) ||
-                                       (pos.X >= topLeftPos.X + (length - View.CELL_WIDTH / 2) &&
-                                       pos.Y <= (topLeftPos.Y + View.CELL_HEIGHT / 2 + 1)) ||
-                                       (pos.X >= topLeftPos.X + (length - View.CELL_WIDTH / 2) &&
-                                       pos.Y >= topLeftPos.Y + (breadth - View.CELL_HEIGHT / 2)));
+            bool timeToChangeDir() => ((pos.X <= (topLeftPos.X + View.CELL_WIDTH / 2 + 1) &&
+                                        pos.Y >= topLeftPos.Y + (height - View.CELL_HEIGHT / 2)) ||
+                                        (pos.X <= (topLeftPos.X + View.CELL_WIDTH / 2 + 1) &&
+                                        pos.Y <= (topLeftPos.Y + View.CELL_HEIGHT / 2 + 1)) ||
+                                        (pos.X >= topLeftPos.X + (length - View.CELL_WIDTH / 2) &&
+                                        pos.Y <= (topLeftPos.Y + View.CELL_HEIGHT / 2 + 1)) ||
+                                        (pos.X >= topLeftPos.X + (length - View.CELL_WIDTH / 2) &&
+                                        pos.Y >= topLeftPos.Y + (height - View.CELL_HEIGHT / 2)));
 
-           public void move()
-           {
-               pos.X += (dir == left) ? -velocity : (dir == right) ? velocity : 0;
-               pos.Y += (dir == up) ? -velocity : (dir == down) ? velocity : 0;
+            public void move()
+            {
+                pos.X += (dir == left) ? -velocity : (dir == right) ? velocity : 0;
+                pos.Y += (dir == up) ? -velocity : (dir == down) ? velocity : 0;
 
-               if (timeToChangeDir())
-                   changeDir();
-           }
+                if (timeToChangeDir())
+                    changeDir();
+            }
 
-           void changeDir()
-           {
-               int index = (movementType == anticlockwise) ? 3 : 1;
-               dir = MOVEMENTS[(MOVEMENTS.IndexOf(dir) + index) % 4];
-           }
-       }
-   }
+            void changeDir()
+            {
+                int index = (movementType == anticlockwise) ? 3 : 1;
+                dir = MOVEMENTS[(MOVEMENTS.IndexOf(dir) + index) % 4];
+            }
+        }
+    }
 }
