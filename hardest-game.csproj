@@ -17,6 +17,7 @@
     <Compile Include="./codes/view.cs" />
     <Compile Include="./codes/movement.cs" />
     <Compile Include="./codes/game.cs" />
+    <Compile Include="./codes/checkpoints.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>
