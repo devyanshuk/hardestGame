@@ -54,7 +54,7 @@ namespace hardestgame
             {
                 if (k.Y == s.pos.Y)
                     return (s.movementType == clockwise) ? right : down;
-                if (k.Y + s.breadth - View.CELL_HEIGHT == s.pos.Y)
+                if (k.Y + s.height - View.CELL_HEIGHT == s.pos.Y)
                     return (s.movementType == clockwise) ? up : right;
                 return (s.movementType == clockwise)? up : down;
             }
@@ -65,11 +65,11 @@ namespace hardestgame
             }
             if (k.X + s.length - View.CELL_WIDTH == s.pos.X)
             {
-                if (k.Y + s.breadth - View.CELL_HEIGHT == s.pos.Y)
+                if (k.Y + s.height - View.CELL_HEIGHT == s.pos.Y)
                     return (s.movementType == clockwise) ? left : up;
                 return (s.movementType == clockwise)? down : up;
             }
-            if (k.Y + s.breadth - View.CELL_HEIGHT == s.pos.Y)
+            if (k.Y + s.height - View.CELL_HEIGHT == s.pos.Y)
                 return (s.movementType == clockwise) ? left : right;
             return left;
         }
@@ -90,6 +90,7 @@ namespace hardestgame
         public void move(int lev)
         {
             List<PointD> p = new List<PointD>();
+
             for (int i = 0; i < xyMov.Count; i++)
             {
                 foreach (PointD wall in wallHitPoints)

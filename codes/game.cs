@@ -15,8 +15,9 @@ namespace hardestgame
         public Player player;
         public Obstacle obs;
         public PointD checkPointPos = new PointD(0, 0);
-        public int coinsCollected = 0, totalCoins, level = 8, fails = 0;
-        public List<PointD> walls, checkPoint;
+        public int coinsCollected = 0, totalCoins = 0, level = 8, fails = 0;
+        public List<PointD> walls;
+        public List<CheckPoints> checkPoint;
         public List<PointD> coinPos = new List<PointD>();
         public bool pauseGame, safeZone, enemy_collision, roundWon;
         public char[,] bg;
@@ -24,6 +25,7 @@ namespace hardestgame
         Dictionary<char, Tuple<PointD, CIRCLE_DIRS, double, double, double>> sqChar;
         List<char> xChar, yChar;
         List<double> xVel, yVel;
+        List<PointD> coinCollected = new List<PointD>();
         public List<PointD> obsList, hitPt;
 
         public void init()
@@ -31,7 +33,10 @@ namespace hardestgame
             walls = new List<PointD>();
             hitPt = new List<PointD>();
             obsList = new List<PointD>();
-            checkPoint = new List<PointD>();
+            checkPoint = new List<CheckPoints>();
+            coinPos.AddRange(coinCollected);
+            coinsCollected = totalCoins - coinPos.Count;
+            coinCollected = new List<PointD>();
 
             xChar = new List<char>();
             yChar = new List<char>();
@@ -57,6 +62,7 @@ namespace hardestgame
             player.dirs = new bool[4];
             updateEnv($"./levels/{this.level}.txt", out List<CircleMovement> c,
                       out List<XyMovement> xy, out List<SquareMovement> sq);
+            //Console.WriteLine($"Coin Count: {coinCollected.Count}");
             obs = new Obstacle(obsList, this.level, hitPt, c, xy, sq);
         }
 
@@ -67,9 +73,9 @@ namespace hardestgame
                 if (ch == 'P')
                 {
                     player.pixPos = (checkPointPos.X != 0 && checkPointPos.Y != 0) ? checkPointPos : pos;
-                    checkPoint.Add(pos);
+                    //checkPoint.Add(pos);
                 }
-                else if (ch == 'C') checkPoint.Add(pos);
+                //else if (ch == 'C') checkPoint.Add(pos);
                 else if (checkPointPos.X == 0 && checkPointPos.Y == 0 && ch == 'X')
                 {
                     totalCoins++;
@@ -132,8 +138,7 @@ namespace hardestgame
             for (int j = 7; j < sp.Count; j++)
                 if (!sqChar.ContainsKey(char.Parse(sp[j])))
                     sqChar.Add(char.Parse(sp[j]),
-                                Tuple.Create(new PointD(x * View.CELL_WIDTH,
-                                y * View.CELL_HEIGHT), d, vel, l, b));
+                                Tuple.Create(new PointD(x, y), d, vel, l, b));
         }
 
         void parseYMovement(List<string> sp)
@@ -179,8 +184,17 @@ namespace hardestgame
             }
         }
 
+        void parseCheckPoints(List<string> sp)
+        {
+            double.TryParse(sp[1], out double tlpX);
+            double.TryParse(sp[2], out double tlpY);
+            double.TryParse(sp[3], out double l);
+            double.TryParse(sp[4], out double h);
+            checkPoint.Add(new CheckPoints(new PointD(tlpX, tlpY), l, h));
+        }
 
-        void parseMovements(StreamReader r)
+
+        void parseMovementsAndCheckPoints(StreamReader r)
         {
             while (r.ReadLine() is string s)
             {
@@ -194,6 +208,8 @@ namespace hardestgame
                     parseYMovement(sp);
                 else if (sp[0] == "[]")
                     parseSquareMovement(sp);
+                else if (sp[0] == "ch")
+                    parseCheckPoints(sp);
             }
         }
 
@@ -273,7 +289,7 @@ namespace hardestgame
             using (StreamReader r = new StreamReader(fileName))
             {
                 double.TryParse(r.ReadLine().Split()[3], out player.speed);
-                parseMovements(r);
+                parseMovementsAndCheckPoints(r);
                 for (int i = 0; i < MAP_HEIGHT; i++)
                 {
                     string s = r.ReadLine();
@@ -316,6 +332,7 @@ namespace hardestgame
                 {
                     coinsCollected++;
                     coinPos.Remove(pos);
+                    coinCollected.Add(pos);
                     break;
                 }
             }
@@ -388,23 +405,35 @@ namespace hardestgame
 
         public void insideSafeZone()
         {
+            bool changed = false;
             if (!roundWon)
             {
-                safeZone = false;
-                foreach (PointD pos in checkPoint)
+                //safeZone = false;
+                foreach (var c in checkPoint)
                 {
-                    PointD po = new PointD(pos.X + View.CELL_WIDTH / 2, pos.Y + View.CELL_HEIGHT / 2);
-                    if (collision(po, View.CELL_WIDTH / 2))
+                    if (player.pixPos.X >= c.topLeftPos.X &&
+                        player.pixPos.X <= c.topLeftPos.X + c.length &&
+                        player.pixPos.Y >= c.topLeftPos.Y &&
+                        player.pixPos.Y <= c.topLeftPos.Y + c.height)
                     {
-                        checkPointPos = pos;
+                        checkPointPos = c.topLeftPos;
                         safeZone = true;
-                        if (!enemy_collision && coinsCollected == totalCoins && totalCoins != 0)
+                        changed = true;
+                        if (coinCollected.Count >= 1)
+                            c.beingAnimated = c.increaseOpacity = true;
+                        coinCollected.Clear();
+                        if (!enemy_collision && coinsCollected == totalCoins &&
+                            totalCoins != 0)
                         {
                             roundWon = true;
                             break;
                         }
                     }
                 }
+                //Console.WriteLine(coinCollected.Count);
+                if (changed)
+                    return;
+                safeZone = false;
             }
         }
     }

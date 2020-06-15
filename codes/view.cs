@@ -50,9 +50,9 @@ namespace hardestgame
             game.init();
             dollar = new Pixbuf("./sprites/dollar.png");
             obstacle = new Pixbuf("./sprites/obs.png");
-            musicOn = new Pixbuf("./music/music_on.png");
-            musicOff = new Pixbuf("./music/music_off.png");
-            //music.SoundLocation = "./music/ffmusic.wav";
+            musicOn = new Pixbuf("./sprites/music_on.png");
+            musicOff = new Pixbuf("./sprites/music_off.png");
+            //music.SoundLocation = "../../ffmusic.wav";
             //music.Load();
             playerOpacity = 1;
             //music.PlayLooping();
