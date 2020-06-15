@@ -23,7 +23,6 @@ namespace hardestgame
         const int MUSIC_ICON_X = 1300, MUSIC_ICON_Y = 800,
                   MUSIC_ICON_WIDTH = 48, MUSIC_ICON_HEIGHT = 48;
 
-        List<double> l = new List<double>() { 0.0, 0.7, 0.0, 0.9 }; //checkPoint color
         Pixbuf dollar, obstacle, musicOn, musicOff;
         SoundPlayer music;
         bool mainTimer = false, playMusic = true;
@@ -53,10 +52,10 @@ namespace hardestgame
             obstacle = new Pixbuf("./sprites/obs.png");
             musicOn = new Pixbuf("./music/music_on.png");
             musicOff = new Pixbuf("./music/music_off.png");
-            music.SoundLocation = "./music/music.wav";
-            music.Load();
+            //music.SoundLocation = "./music/ffmusic.wav";
+            //music.Load();
             playerOpacity = 1;
-            music.PlayLooping();
+            //music.PlayLooping();
         }
 
 
@@ -184,12 +183,33 @@ namespace hardestgame
             c.Fill();
         }
 
+        void animateCheckPoint(CheckPoints k)
+        {
+            if (k.increaseOpacity)
+            {
+                k.l[1] -= 0.01;
+                if (k.l[1] <= 0.45)
+                {
+                    k.increaseOpacity = false;
+                    k.decreaseOpacity = true;
+                }
+            }
+            else if (k.decreaseOpacity)
+            {
+                k.l[1] += 0.01;
+                if (k.l[1] >= k.green)
+                    k.decreaseOpacity = false;
+            }
+        }
+
         void drawCheckPoints(Context c)
         {
-            c.SetSourceRGBA(l[0], l[1], l[2], l[3]);
-            foreach (PointD pos in game.checkPoint)
+            foreach (var k in game.checkPoint)
             {
-                c.Rectangle(pos.X, pos.Y, CELL_WIDTH, CELL_HEIGHT);
+                if (k.beingAnimated)
+                    animateCheckPoint(k);
+                c.SetSourceRGBA(k.l[0], k.l[1], k.l[2], k.l[3]);
+                c.Rectangle(k.topLeftPos.X, k.topLeftPos.Y, k.length, k.height);
                 c.Fill();
             }
         }
