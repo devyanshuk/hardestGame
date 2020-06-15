@@ -4,14 +4,17 @@ PLAYER SPEED = 2.5
 () ( 2.2 8 7 B
 () ) 2.2 8 7 F
 () ) 2.2 16.5 8 > <
+ch 20 5 1 1
+ch 15 6 1 1
+ch 4 5 1 1
 
 #######################
 #######################
 #######################
 #######################
 ##HWW###WWWW##H####WW##
-#W11PWWH11XOHW1W##W1CW#
-#WXW11WWBWWWWWKCW#W1W##
+#W11PWWH11XOHW1W##W11W#
+#WXW11WWBWWWWWK1W#W1W##
 #WYWW111X1111111WW11W##
 #W1W11WWFWWWWWHR<>XH###
 #H1OXHWH1X1OH##W11W####
