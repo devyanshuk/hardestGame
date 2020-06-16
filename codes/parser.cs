@@ -50,7 +50,7 @@ namespace hardestgame
 
         public void updateEnv(string fileName, Player player, out List<CircleMovement> circleMov,
                      out List<XyMovement> xyMov, out List<SquareMovement> sqMov,
-                     ref List<PointD> walls, ref List<CheckPoints> checkPoint, ref List<PointD> obsList,
+                     ref List<Wall> walls, ref List<CheckPoints> checkPoint, ref List<PointD> obsList,
                      ref PointD checkPointPos, ref int totalCoins, ref List<PointD> coinPos, ref char[,]bg,
                      ref List<PointD> hitPt)
         {
@@ -67,6 +67,8 @@ namespace hardestgame
                     for (int j = 0; j < Game.MAP_WIDTH; j++)
                     {
                         char ch = s[j];
+
+                        PointD tlp = new PointD(j, i);
 
                         PointD pos = new PointD(View.X_MARGIN + View.CELL_WIDTH * j,
                                         View.Y_MARGIN + View.CELL_HEIGHT * i);
@@ -89,7 +91,7 @@ namespace hardestgame
                         }
                         _updateEnv(ch, pos, newPos, i, j, player, ref walls,
                                    ref checkPoint, ref obsList, ref checkPointPos,
-                                   ref totalCoins, ref coinPos, ref bg, ref hitPt );
+                                   ref totalCoins, ref coinPos, ref bg, ref hitPt, tlp );
                     }
                 }
                 var k = circleMov;
@@ -98,9 +100,9 @@ namespace hardestgame
         }
 
         void _updateEnv(char ch, PointD pos, PointD newPos, int i, int j, Player player,
-                        ref List<PointD> walls, ref List<CheckPoints> checkPoint,
+                        ref List<Wall> walls, ref List<CheckPoints> checkPoint,
                         ref List<PointD> obsList, ref PointD checkPointPos, ref int totalCoins,
-                        ref List<PointD> coinPos, ref char[,]bg, ref List<PointD> hitPt )
+                        ref List<PointD> coinPos, ref char[,]bg, ref List<PointD> hitPt, PointD tlp )
         {
             if (ch != '1' && ch != '#' && ch != 'W' && ch != ']' && ch != '[' && ch != 'H')
             {
@@ -138,10 +140,10 @@ namespace hardestgame
                 ch = (ch != '!' && ch != ':') ? '1' : 'W';
             }
             bg[i, j] = ch;
-            if (ch == 'W') walls.Add(pos);
+            if (ch == 'W') walls.Add(new Wall(tlp, 1, 1));
             else if (ch == '[' || ch == ']')
             {
-                walls.Add(pos);
+                walls.Add(new Wall(tlp, 1, 1));
                 newPos = new PointD(newPos.X + ((ch == ']') ? View.CELL_WIDTH / 2 :
                                     (ch == '[') ? -View.CELL_WIDTH / 2 : 0), newPos.Y);
                 obsList.Add(newPos);
@@ -149,7 +151,7 @@ namespace hardestgame
 
             else if (ch == 'H')
             {
-                walls.Add(pos);
+                walls.Add(new Wall(tlp, 1, 1));
                 hitPt.Add(pos);
             }
         }

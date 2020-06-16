@@ -16,8 +16,8 @@ namespace hardestgame
         public Player player;
         public Obstacle obs;
         public PointD checkPointPos = new PointD(0, 0);
-        public int coinsCollected = 0, totalCoins = 0, level = 6, fails = 0;
-        public List<PointD> walls;
+        public int coinsCollected = 0, totalCoins = 0, level = 8, fails = 0;
+        public List<Wall> walls;
         public List<CheckPoints> checkPoint;
         public List<PointD> coinPos = new List<PointD>();
         public bool pauseGame, safeZone, enemy_collision, roundWon;
@@ -34,7 +34,7 @@ namespace hardestgame
         public void init()
         {
             parser.init();
-            walls = new List<PointD>();
+            walls = new List<Wall>();
             hitPt = new List<PointD>();
             obsList = new List<PointD>();
             checkPoint = new List<CheckPoints>();
@@ -66,23 +66,25 @@ namespace hardestgame
 
         void startTimer()
         {
-                GLib.Timeout.Add(UPDATE_TIME, delegate
+            GLib.Timeout.Add(UPDATE_TIME, delegate
+            {
+                if (!enemy_collision)
                 {
-                    if (!enemy_collision)
-                    {
-                        obs.move(level);
-                        if (!safeZone)
-                            enemyCollision();
-                        wallCollision();
-                        checkForCoins();
-                        player.changePixPos();
-                    }
-                    insideSafeZone();
-                    if (enemy_collision || roundWon)
-                        player.makePlayerDisappear();
-                    gameStateChanged?.Invoke();
-                    return true;
-                });
+                    obs.move(level);
+                    if (!safeZone)
+                        enemyCollision();
+                    wallCollision();
+                    checkForCoins();
+                    player.changePixPos();
+                }
+                insideSafeZone();
+                if (enemy_collision || roundWon)
+                    player.makePlayerDisappear();
+                gameStateChanged?.Invoke();
+                player.canNotMove = new bool[4];
+                return true;
+
+            });
         }
 
 
@@ -90,7 +92,7 @@ namespace hardestgame
         {
             foreach (PointD pos in coinPos)
             {
-                if (collision(pos, Obstacle.RADIUS))
+                if (collision(pos, (double) Obstacle.RADIUS, (double) Obstacle.RADIUS, 0))
                 {
                     coinsCollected++;
                     coinPos.Remove(pos);
@@ -109,10 +111,13 @@ namespace hardestgame
                                                 pPos.X + player.speed + player.size.X / 2,
                                                 pPos.Y - player.speed - player.size.Y / 2,
                                                 pPos.Y + player.speed + player.size.Y / 2 };
+
             bool[] canNotMove = new bool[4]; //left, right, up, down
-            foreach (PointD wall in walls)
+
+            foreach (Wall wall in walls)
             {
-                PointD wPos = new PointD(wall.X + View.CELL_WIDTH / 2, wall.Y + View.CELL_HEIGHT / 2);
+                PointD wPos = new PointD(wall.topLeftPos.X + View.CELL_WIDTH / 2,
+                                         wall.topLeftPos.Y + View.CELL_HEIGHT / 2);
                 for (int i = 0; i < 4; i++)
                 {
                     double wpo = (i < 2) ? wPos.X : wPos.Y;
@@ -131,21 +136,19 @@ namespace hardestgame
             player.canNotMove = canNotMove;
         }
 
-        bool withinBounds(PointD po)
+        List<PointD> getHitPoints(PointD po, double radX, double radY, double a)
         {
-            return (po.X >= player.pixPos.X && po.X <= player.pixPos.X + player.size.X &&
-                po.Y >= player.pixPos.Y && po.Y <= player.pixPos.Y + player.size.Y);
+            var l = new PointD(po.X - radX - a, po.Y);
+            var r = new PointD(po.X + radX + a, po.Y);
+            var d = new PointD(po.X, po.Y + radY + a);
+            var u = new PointD(po.X, po.Y - radY - a);
+            return new List<PointD> { l, r, u, d };
         }
 
-        public bool collision(PointD po, int rad)
+        public bool collision(PointD po, double radX, double radY, double a)
         {
-            var l = new PointD(po.X - rad, po.Y);
-            var r = new PointD(po.X + rad, po.Y);
-            var d = new PointD(po.X, po.Y + rad);
-            var u = new PointD(po.X, po.Y - rad);
-            if (withinBounds(l) || withinBounds(r) || withinBounds(d) || withinBounds(u))
-                return true;
-            return false;
+            var l = getHitPoints(po, radX, radY, a);
+            return (player.collision(l[0]) || player.collision(l[1]) || player.collision(l[2]) || player.collision(l[3]));
         }
 
         public void enemyCollision()
@@ -154,7 +157,7 @@ namespace hardestgame
             {
                 foreach (PointD po in obs.pos)
                 {
-                    if (collision(po, Obstacle.RADIUS / 2))
+                    if (collision(po, (double)Obstacle.RADIUS / 2, (double)Obstacle.RADIUS / 2, 0))
                     {
                         fails++;
                         enemy_collision = true;
@@ -165,14 +168,6 @@ namespace hardestgame
             }
         }
 
-        bool checkPointColl(CheckPoints c, PointD p)
-        {
-            return (p.X >= c.topLeftPos.X &&
-                    p.X <= c.topLeftPos.X + c.length &&
-                    p.Y >= c.topLeftPos.Y &&
-                    p.Y <= c.topLeftPos.Y + c.height);
-        }
-
         public void insideSafeZone()
         {
             bool changed = false;
@@ -180,9 +175,9 @@ namespace hardestgame
             {
                 foreach (var c in checkPoint)
                 {
-                    if (checkPointColl(c, player.pixPos) &&
-                        checkPointColl(c, new PointD(player.pixPos.X + player.size.X,
-                                        player.pixPos.Y + player.size.Y)))
+                     if (c.collision(player.pixPos) &&
+                        c.collision(new PointD(player.pixPos.X + player.size.X,
+                                               player.pixPos.Y + player.size.Y)))
                     {
                         checkPointPos = c.topLeftPos;
                         safeZone = true;

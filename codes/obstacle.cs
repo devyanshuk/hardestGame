@@ -59,11 +59,11 @@ namespace hardestgame
                 return (s.movementType == clockwise)? up : down;
             }
             if (k.Y == s.pos.Y) {
-                if (k.X + s.length - View.CELL_WIDTH == s.pos.X)
+                if (k.X + s.width - View.CELL_WIDTH == s.pos.X)
                     return (s.movementType == clockwise) ? down : left;
                 return (s.movementType == clockwise)? right : left;
             }
-            if (k.X + s.length - View.CELL_WIDTH == s.pos.X)
+            if (k.X + s.width - View.CELL_WIDTH == s.pos.X)
             {
                 if (k.Y + s.height - View.CELL_HEIGHT == s.pos.Y)
                     return (s.movementType == clockwise) ? left : up;

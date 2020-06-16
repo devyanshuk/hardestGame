@@ -62,7 +62,7 @@ namespace hardestgame
             }
         }
 
-        public class SquareMovement : Square
+        public class SquareMovement : Rectangle
         {
             List<XY_DIRS> MOVEMENTS = new List<XY_DIRS>()
                                             {up, right, down, left};
@@ -70,14 +70,14 @@ namespace hardestgame
             public PointD pos;
             public XY_DIRS dir;
             public CIRCLE_DIRS movementType;
-            public SquareMovement(double velocity, PointD pos, XY_DIRS dir, CIRCLE_DIRS movementType, PointD topLeftPos, double length, double breadth)
+            public SquareMovement(double velocity, PointD pos, XY_DIRS dir, CIRCLE_DIRS movementType, PointD topLeftPos, double width, double breadth)
             {
                 this.velocity = velocity;
                 this.pos = pos;
                 this.dir = dir;
                 this.movementType = movementType;
                 this.topLeftPos = topLeftPos;
-                this.length = length;
+                this.width = width;
                 this.height = breadth;
                 adjustPos();
             }
@@ -86,9 +86,9 @@ namespace hardestgame
                                         pos.Y >= topLeftPos.Y + (height - View.CELL_HEIGHT / 2)) ||
                                         (pos.X <= (topLeftPos.X + View.CELL_WIDTH / 2 + 1) &&
                                         pos.Y <= (topLeftPos.Y + View.CELL_HEIGHT / 2 + 1)) ||
-                                        (pos.X >= topLeftPos.X + (length - View.CELL_WIDTH / 2) &&
+                                        (pos.X >= topLeftPos.X + (width - View.CELL_WIDTH / 2) &&
                                         pos.Y <= (topLeftPos.Y + View.CELL_HEIGHT / 2 + 1)) ||
-                                        (pos.X >= topLeftPos.X + (length - View.CELL_WIDTH / 2) &&
+                                        (pos.X >= topLeftPos.X + (width - View.CELL_WIDTH / 2) &&
                                         pos.Y >= topLeftPos.Y + (height - View.CELL_HEIGHT / 2)));
 
             public void move()

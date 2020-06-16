@@ -3,15 +3,9 @@ using Gdk;
 
 namespace hardestgame
 {
-    public class Player
+    public class Player : Rectangle
     {
         public event Notify opacityChanged;
-
-        Key[] DIRS = new Key[4] { Key.Left,
-                                  Key.Right,
-                                  Key.Up,
-                                  Key.Down
-                                };
 
         public PointD pixPos { get; set; }
         public PointD size { get; set; }
@@ -20,21 +14,22 @@ namespace hardestgame
         const int WIDTH = 35, HEIGHT = 35;
         public bool[] dirs;
 
-        public double red = 1.0;
-        public double green = 0.0;
-        public double blue = 0.0;
-        public double opacity;
-
         public Player(double speed)
         {
             size = new PointD(WIDTH, HEIGHT);
             canNotMove = new bool[4]; //left, right. up, down
             dirs = new bool[4]; //left, right, up, down
             this.speed = speed;
+            width = WIDTH;
+            height = HEIGHT;
+            red = 1.0;
+            green = 0.0;
+            blue = 0.0;
             opacity = 1.0;
-        }
 
-        public void changePixPos()
+    }
+
+    public void changePixPos()
         {
             PointD pos = pixPos;
             int x, y;
@@ -43,7 +38,7 @@ namespace hardestgame
             x = (dirs[0] && !a)? -1 : (dirs[1] && !b) ? 1 : 0;
             pos.X += speed * x;
             pos.Y += speed * y;
-            pixPos = pos;
+            pixPos =  topLeftPos = pos;
         }
 
         public void updateDir(bool keyRelease, EventKey evnt)
@@ -51,7 +46,7 @@ namespace hardestgame
             for (int i = 0; i < 4; i++)
             {
                 bool b = keyRelease ? dirs[i] : !dirs[i];
-                if (evnt.Key == DIRS[i] && b)
+                if (evnt.Key == View.DIRS[i] && b)
                     dirs[i] = !keyRelease;
             }
         }
@@ -62,5 +57,6 @@ namespace hardestgame
             if (opacity <= 0.0)
                 opacityChanged?.Invoke();
         }
+
     }
 }

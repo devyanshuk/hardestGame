@@ -11,21 +11,27 @@ namespace hardestgame
     public class View : window
     {
         public const int CELL_WIDTH = 60, CELL_HEIGHT = 60;
-        public const int SCREEN_WIDTH = 1380, SCREEN_HEIGHT = 850;
+        public const int SCREEN_WIDTH = 1380, SCREEN_HEIGHT = 800;
         Gdk.Color BACKGROUND_COLOR = new Gdk.Color(0, 100, 128);
         public const int Y_MARGIN = 0, X_MARGIN = 0;
 
-        const int MUSIC_ICON_X = 1300, MUSIC_ICON_Y = 800,
-                  MUSIC_ICON_WIDTH = 48, MUSIC_ICON_HEIGHT = 48;
+        public static List<Gdk.Key> DIRS = new List<Gdk.Key>
+                                          { Gdk.Key.Left,
+                                            Gdk.Key.Right,
+                                            Gdk.Key.Up,
+                                            Gdk.Key.Down
+                                          };
 
-        const int MENU_ICON_X = 20, MENU_ICON_Y = 800,
-                  MENU_ICON_WIDTH = 50, MENU_ICON_HEIGHT = 50;
+        Rectangle musicIcon = new Rectangle();
 
+        Rectangle menuIcon = new Rectangle();
 
+        Rectangle levelSelect;
 
-        Pixbuf dollar, obstacle, musicOn, musicOff, menu;
+        Pixbuf dollar, obstacle, musicOn, musicOff, menu, greenMenu;
         //SoundPlayer music;
         bool playMusic = true;
+        public bool mouseOnMenuIcon;
         PointD mouseLocation;
 
         //int currPage = 1;
@@ -42,12 +48,32 @@ namespace hardestgame
 
         public View() : base("World's Hardest game")
         {
+
+            musicIcon.topLeftPos = new PointD(1300, 750);
+            musicIcon.width = 48;
+            musicIcon.height = 48;
+
+            menuIcon.topLeftPos = new PointD(20, 750);
+            menuIcon.width = 50;
+            menuIcon.height = 50;
+
+            initializeMenuOptions();
+
             dollar = new Pixbuf("./sprites/dollar.png");
+            greenMenu = new Pixbuf("./sprites/menu_green.png").ScaleSimple((int)menuIcon.width,
+                             (int)menuIcon.height, InterpType.Bilinear);
             obstacle = new Pixbuf("./sprites/obs.png");
-            musicOn = new Pixbuf("./music/music_on.png");
+            musicOn = new Pixbuf("./music/music_on.png").ScaleSimple((int)musicIcon.width,
+                                   (int)musicIcon.height, InterpType.Bilinear);
             musicOff = new Pixbuf("./music/music_off.png");
-            menu = new Pixbuf("./sprites/menu.png").ScaleSimple(50, 50, InterpType.Bilinear);
+            menu = new Pixbuf("./sprites/menu.png").ScaleSimple((int)menuIcon.width,
+                             (int)menuIcon.height, InterpType.Bilinear);
+
+            mouseOnMenuIcon = false;
+
+
             menuOptions = new ImageSurface(Format.Argb32, 500, 500);
+
             addMenuOptions();
 
             //music.SoundLocation = "../../ffmusic.wav";
@@ -79,14 +105,25 @@ namespace hardestgame
             game.player.opacityChanged += init;
         }
 
+        void initializeMenuOptions()
+        {
+            levelSelect = new Rectangle();
+            levelSelect.text = $"Select level";
+            levelSelect.red = 0;
+            levelSelect.green = 0.5;
+            levelSelect.blue = 0;
+            levelSelect.opacity = 0.5;
+
+        }
+
         void addMenuOptions()
         {
-            using (Context c = new Context(menuOptions))
-            {
-                c.SetSourceRGBA(0.3, 0, 0.6, 0.3);
-                c.Rectangle(0, 0, 500, 500);
-                c.Fill();
-            }
+             using (Context c = new Context(menuOptions))
+             {
+                 c.SetSourceRGBA(0.3, 0.1, 0.2, 0.5);
+                 c.Rectangle(0, 0, 500, 500);
+                 c.Fill();
+             }
         }
 
         void addAllLevels()
@@ -108,6 +145,7 @@ namespace hardestgame
                         drawMap(c, 20, 20, bg, true);
                         allLevels.Add(s);
                     }
+
                 }
 
                 catch (System.IO.FileNotFoundException)
@@ -120,6 +158,7 @@ namespace hardestgame
         protected override bool OnKeyPressEvent(EventKey evnt)
         {
             game.player.updateDir(false, evnt);
+            menuLogoSelected = !DIRS.Contains(evnt.Key);
             return true;
 
         }
@@ -133,22 +172,19 @@ namespace hardestgame
         protected override bool OnMotionNotifyEvent(EventMotion evnt)
         {
             mouseLocation = new PointD(evnt.X, evnt.Y);
+            mouseOnMenuIcon = menuIcon.collision(mouseLocation);
             return true;
-        }
-
-        bool pointerInsideObj(double a, double b, int x, int y, int l, int h)
-        {
-            return (a >= x && a <= x + l && b >= y && b <= y + h);
         }
 
         protected override bool OnButtonPressEvent(EventButton evnt)
         {
             double a = mouseLocation.X, b = mouseLocation.Y;
+            PointD p = new PointD(a, b);
 
-            if (pointerInsideObj(a,b, MUSIC_ICON_X, MUSIC_ICON_Y, MUSIC_ICON_WIDTH, MUSIC_ICON_HEIGHT))
+            if (musicIcon.collision(p))
                 playMusic = !playMusic;
 
-            if (pointerInsideObj(a, b, MENU_ICON_X, MENU_ICON_Y, MENU_ICON_WIDTH, MENU_ICON_HEIGHT))
+            if (menuIcon.collision(p))
                 menuLogoSelected = !menuLogoSelected;
 
             return true;
@@ -186,9 +222,9 @@ namespace hardestgame
             }
         }
 
-        void updateLevels(Context c, string st, PointD p)
+        void displayText(Context c, string st, PointD p, int fontSize)
         {
-            c.SetFontSize(30);
+            c.SetFontSize(fontSize);
             c.SetSourceRGB(1, 1, 1);
             TextExtents te = c.TextExtents(st);
             PointD mp = new PointD(10 + p.X - (te.Width / 2 + te.XBearing),
@@ -203,12 +239,12 @@ namespace hardestgame
             c.SetSourceRGB(0.1, 0.4, 0.6);
             c.Rectangle(0, 0, SCREEN_WIDTH, 50);
             c.Fill();
-            updateLevels(c, $"LEVEL : {game.level}", new PointD(120, 15));
-            updateLevels(c, $"FAILS : {game.fails}", new PointD(1180, 15));
-            updateLevels(c, $"COINS : {game.coinsCollected} / {game.totalCoins}",
-                         new PointD(700, 15));
+            displayText(c, $"LEVEL : {game.level}", new PointD(120, 15), 30);
+            displayText(c, $"FAILS : {game.fails}", new PointD(1180, 15), 30);
+            displayText(c, $"COINS : {game.coinsCollected} / {game.totalCoins}",
+                         new PointD(700, 15), 30);
             c.SetSourceRGB(0.1, 0.4, 0.6);
-            c.Rectangle(0, 800, SCREEN_WIDTH, 50);
+            c.Rectangle(0, 750, SCREEN_WIDTH, 50);
             c.Fill();
         }
 
@@ -219,7 +255,7 @@ namespace hardestgame
                 if (k.beingAnimated)
                     k.animateCheckPoint();
                 c.SetSourceRGBA(k.red, k.green, k.blue, k.opacity);
-                c.Rectangle(k.topLeftPos.X, k.topLeftPos.Y, k.length, k.height);
+                c.Rectangle(k.topLeftPos.X, k.topLeftPos.Y, k.width, k.height);
                 c.Fill();
             }
         }
@@ -236,7 +272,7 @@ namespace hardestgame
         void drawMusicIcon(Context c)
         {
             Pixbuf p = playMusic ? musicOn : musicOff;
-            CairoHelper.SetSourcePixbuf(c, p, MUSIC_ICON_X, MUSIC_ICON_Y);
+            CairoHelper.SetSourcePixbuf(c, p, musicIcon.topLeftPos.X, musicIcon.topLeftPos.Y);
             c.Paint();
         }
 
@@ -258,6 +294,13 @@ namespace hardestgame
             }
         }
 
+        void drawMenuIcon(Context c)
+        {
+            Pixbuf p = mouseOnMenuIcon ? greenMenu : menu;
+            CairoHelper.SetSourcePixbuf(c, p, menuIcon.topLeftPos.X, menuIcon.topLeftPos.Y);
+            c.Paint();
+        }
+
 
         protected override bool OnExposeEvent(EventExpose evnt)
         {
@@ -270,12 +313,10 @@ namespace hardestgame
                 drawSprite(c, game.obs.pos, obstacle);
                 drawPlayer(c);
                 drawMusicIcon(c);
-                CairoHelper.SetSourcePixbuf(c, menu, MENU_ICON_X, MENU_ICON_Y);
-                c.Paint();
+                drawMenuIcon(c);
                 displayMenu(c);
                 displayLevelMenu(c);
             }
-            game.player.canNotMove = new bool[4];
             return true;
         }
 
@@ -284,6 +325,7 @@ namespace hardestgame
             Application.Quit();
             return true;
         }
+
 
         static void Main()
         {
