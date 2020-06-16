@@ -66,7 +66,6 @@ namespace hardestgame
 
         void startTimer()
         {
-            {
                 GLib.Timeout.Add(UPDATE_TIME, delegate
                 {
                     if (!enemy_collision)
@@ -84,7 +83,6 @@ namespace hardestgame
                     gameStateChanged?.Invoke();
                     return true;
                 });
-            }
         }
 
 
