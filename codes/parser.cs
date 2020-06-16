@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Cairo;
 using System.Collections.Generic;
 using System.IO;
@@ -28,9 +28,9 @@ namespace hardestgame
 
         public void updateEnv(string fileName, Player player, out List<CircleMovement> circleMov,
                      out List<XyMovement> xyMov, out List<SquareMovement> sqMov,
-                     ref List<PointD> walls, ref List<CheckPoints> checkPoint,
-                     ref List<PointD> obsList, ref PointD checkPointPos, ref int totalCoins,
-                     ref List<PointD> coinPos, ref char[,]bg, ref List<PointD> hitPt)
+                     ref List<PointD> walls, ref List<CheckPoints> checkPoint, ref List<PointD> obsList,
+                     ref PointD checkPointPos, ref int totalCoins, ref List<PointD> coinPos, ref char[,]bg,
+                     ref List<PointD> hitPt)
         {
             circleMov = new List<CircleMovement>();
             xyMov = new List<XyMovement>();
@@ -66,8 +66,8 @@ namespace hardestgame
                             xyMov.Add(new XyMovement(yVel[index], newPos, up));
                         }
                         _updateEnv(ch, pos, newPos, i, j, player, ref walls,
-                                  ref checkPoint, ref obsList, ref checkPointPos,
-                                  ref totalCoins, ref coinPos, ref bg, ref hitPt );
+                                   ref checkPoint, ref obsList, ref checkPointPos,
+                                   ref totalCoins, ref coinPos, ref bg, ref hitPt );
                     }
                 }
                 var k = circleMov;
@@ -77,15 +77,13 @@ namespace hardestgame
 
         void _updateEnv(char ch, PointD pos, PointD newPos, int i, int j, Player player,
                         ref List<PointD> walls, ref List<CheckPoints> checkPoint,
-                        ref List<PointD> obsList, ref PointD checkPointPos,
-                        ref int totalCoins, ref List<PointD> coinPos, ref char[,]bg,
-                        ref List<PointD> hitPt )
+                        ref List<PointD> obsList, ref PointD checkPointPos, ref int totalCoins,
+                        ref List<PointD> coinPos, ref char[,]bg, ref List<PointD> hitPt )
         {
             if (ch != '1' && ch != '#' && ch != 'W' && ch != ']' && ch != '[' && ch != 'H')
             {
                 if (ch == 'P')
                     player.pixPos = (checkPointPos.X != 0 && checkPointPos.Y != 0) ? checkPointPos : pos;
-
                 else if (checkPointPos.X == 0 && checkPointPos.Y == 0 && ch == 'X')
                 {
                     totalCoins++;
@@ -99,7 +97,6 @@ namespace hardestgame
                         coinPos.Add(newPos);
                     }
                     obsList.Add(newPos);
-
                 }
                 else if (ch == ';' || ch == 'V' || ch == '^')
                 {
@@ -248,6 +245,19 @@ namespace hardestgame
             return l;
         }
 
+        bool checkForSpecialCharacters(char ch, PointD newPos, out PointD n)
+        {
+            n = new PointD(0, 0);
+            if (ch == ';' || ch == 'V' || ch == '^' || ch == '.')
+            {
+                n = new PointD(newPos.X + ((ch == ';' || ch == ':' || ch == '.') ?
+                View.CELL_WIDTH / 2 : 0), newPos.Y + ((ch == 'V') ?
+                View.CELL_HEIGHT / 2 : (ch == '^') ? -View.CELL_HEIGHT / 2 : 0));
+                return true;
+            }
+            return false;
+        }
+
         List<CircleMovement> addCircularMovement(char ch, PointD pos, PointD newPos)
         {
             var t = cChar[ch];
@@ -260,13 +270,8 @@ namespace hardestgame
                                     View.CELL_HEIGHT / 2 + ((ch == '!') ?
                                     View.CELL_HEIGHT / 2 : 0)), 0, t.Item1, t.Item2));
 
-            if (ch == ';' || ch == 'V' || ch == '^' || ch == '.')
-            {
-                PointD n = new PointD(newPos.X + ((ch == ';' || ch == ':' || ch == '.') ?
-                    View.CELL_WIDTH / 2 : 0), newPos.Y + ((ch == 'V') ? View.CELL_HEIGHT / 2 :
-                    (ch == '^') ? -View.CELL_HEIGHT / 2 : 0));
+            if (checkForSpecialCharacters(ch, newPos, out PointD n))
                 l.Add(new CircleMovement(t.Item3, n, 0, t.Item1, t.Item2));
-            }
             if (ch == '.') l.Add(new CircleMovement(t.Item3,
                                 new PointD(newPos.X - View.CELL_WIDTH / 2,
                                 newPos.Y), 0, t.Item1, t.Item2));
@@ -278,15 +283,10 @@ namespace hardestgame
             var t = sqChar[ch];
             var l = new List<SquareMovement>();
             l.Add(new SquareMovement(t.Item3, newPos, down, t.Item2, t.Item1, t.Item4, t.Item5));
-            if (ch == ';' || ch == 'V' || ch == '^' || ch == '.')
-            {
-                PointD n = new PointD(newPos.X + ((ch == ';' || ch == ':' || ch == '.') ?
-                    View.CELL_WIDTH / 2 : 0), newPos.Y + ((ch == 'V') ?
-                    View.CELL_HEIGHT / 2 : (ch == '^') ? -View.CELL_HEIGHT / 2 : 0));
-
+            if (checkForSpecialCharacters(ch, newPos, out PointD n))
                 l.Add(new SquareMovement(t.Item3, n, down, t.Item2, t.Item1, t.Item4, t.Item5));
-            }
             return l;
         }
     }
+
 }
