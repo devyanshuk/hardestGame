@@ -57,21 +57,25 @@ namespace hardestgame
             game.player.opacityChanged += init;
         }
 
-        protected override bool OnKeyPressEvent(EventKey evnt)
+        void updateDir(bool keyRelease, EventKey evnt)
         {
             for (int i = 0; i < 4; i++)
-                if (evnt.Key == DIRS[i] && !game.player.dirs[i])
-                    game.player.dirs[i] = true;
-            return true;
+            {
+                bool b = keyRelease ? game.player.dirs[i] : !game.player.dirs[i];
+                if (evnt.Key == DIRS[i] && b)
+                    game.player.dirs[i] = !keyRelease;
+            }
+        }
 
+        protected override bool OnKeyPressEvent(EventKey evnt)
+        {
+            updateDir(false, evnt);
+            return true;
         }
 
         protected override bool OnKeyReleaseEvent(EventKey evnt)
         {
-            for (int i = 0; i < 4; i++)
-                if (evnt.Key == DIRS[i] && game.player.dirs[i])
-                    game.player.dirs[i] = false;
-            if (!game.pauseGame && !game.roundWon) QueueDraw();
+            updateDir(true, evnt);
             return true;
         }
 
@@ -113,8 +117,10 @@ namespace hardestgame
                         PointD currPos = new PointD(X_MARGIN + CELL_WIDTH * j,
                                                     Y_MARGIN + CELL_HEIGHT * i);
                         c.MoveTo(currPos);
-                        if (j % 2 == i % 2) c.SetSourceRGB(1.0, 1.0, 1.0);
-                        else c.SetSourceRGB(0.6, 0.9, 0.9);
+                        if (j % 2 == i % 2)
+                            c.SetSourceRGB(1.0, 1.0, 1.0);
+                        else
+                            c.SetSourceRGB(0.6, 0.9, 0.9);
                         c.Rectangle(currPos.X, currPos.Y, CELL_WIDTH, CELL_HEIGHT);
                         c.Fill();
                     }
