@@ -2,16 +2,21 @@ using System;
 using Cairo;
 using System.Collections.Generic;
 using static hardestgame.Movement;
+public delegate void Notify();
 
 namespace hardestgame
 {
     public class Game
     {
+        public event Notify gameStateChanged;
+
         public const int MAP_WIDTH = 23, MAP_HEIGHT = 15;
+        const uint UPDATE_TIME = 20;
+
         public Player player;
         public Obstacle obs;
         public PointD checkPointPos = new PointD(0, 0);
-        public int coinsCollected = 0, totalCoins = 0, level = 4, fails = 0;
+        public int coinsCollected = 0, totalCoins = 0, level = 6, fails = 0;
         public List<PointD> walls;
         public List<CheckPoints> checkPoint;
         public List<PointD> coinPos = new List<PointD>();
@@ -20,6 +25,11 @@ namespace hardestgame
         List<PointD> coinCollected = new List<PointD>();
         public List<PointD> obsList, hitPt;
         Parser parser = new Parser();
+
+        public Game()
+        {
+            startTimer();
+        }
 
         public void init()
         {
@@ -52,6 +62,29 @@ namespace hardestgame
                             ref checkPoint, ref obsList, ref checkPointPos, ref totalCoins,
                             ref coinPos, ref bg, ref hitPt);
             obs = new Obstacle(obsList, this.level, hitPt, c, xy, sq);
+        }
+
+        void startTimer()
+        {
+            {
+                GLib.Timeout.Add(UPDATE_TIME, delegate
+                {
+                    if (!enemy_collision)
+                    {
+                        obs.move(level);
+                        if (!safeZone)
+                            enemyCollision();
+                        wallCollision();
+                        checkForCoins();
+                        player.changePixPos();
+                    }
+                    insideSafeZone();
+                    if (enemy_collision || roundWon)
+                        player.makePlayerDisappear();
+                    gameStateChanged?.Invoke();
+                    return true;
+                });
+            }
         }
 
 

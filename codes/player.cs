@@ -3,6 +3,8 @@ namespace hardestgame
 {
     public class Player
     {
+        public event Notify opacityChanged;
+
         public PointD pixPos { get; set; }
         public PointD size { get; set; }
         public double speed;
@@ -10,12 +12,18 @@ namespace hardestgame
         const int WIDTH = 35, HEIGHT = 35;
         public bool[] dirs;
 
+        public double red = 1.0;
+        public double green = 0.0;
+        public double blue = 0.0;
+        public double opacity;
+
         public Player(double speed)
         {
             size = new PointD(WIDTH, HEIGHT);
             canNotMove = new bool[4]; //left, right. up, down
             dirs = new bool[4]; //left, right, up, down
             this.speed = speed;
+            opacity = 1.0;
 
         }
 
@@ -31,5 +39,11 @@ namespace hardestgame
             pixPos = pos;
         }
 
+        public void makePlayerDisappear()
+        {
+            opacity -= 0.03;
+            if (opacity <= 0.0)
+                opacityChanged?.Invoke();
+        }
     }
 }

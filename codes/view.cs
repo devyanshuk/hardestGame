@@ -10,7 +10,6 @@ namespace hardestgame
 {
     public class View : window
     {
-        public const uint UPDATE_TIME = 20;
         public const int CELL_WIDTH = 60, CELL_HEIGHT = 60;
         public const int SCREEN_WIDTH = 1380, SCREEN_HEIGHT = 850;
         Gdk.Color BACKGROUND_COLOR = new Gdk.Color(0, 100, 128);
@@ -25,11 +24,10 @@ namespace hardestgame
 
         Pixbuf dollar, obstacle, musicOn, musicOff;
         SoundPlayer music;
-        bool mainTimer = false, playMusic = true;
+        bool playMusic = true;
         PointD mouseLocation;
-        double playerOpacity;
 
-        Game game = new Game();
+        Game game;
 
         public View() : base("World's Hardest game")
         {
@@ -40,8 +38,8 @@ namespace hardestgame
                      EventMask.PointerMotionMask));
             Resize(SCREEN_WIDTH, SCREEN_HEIGHT);
             ModifyBg(StateType.Normal, BACKGROUND_COLOR);
+            game = new Game();
             init();
-            startTimer();
         }
 
         void init()
@@ -54,42 +52,9 @@ namespace hardestgame
             musicOff = new Pixbuf("./music/music_off.png");
             //music.SoundLocation = "../../ffmusic.wav";
             //music.Load();
-            playerOpacity = 1;
             //music.PlayLooping();
-        }
-
-
-        void startTimer()
-        {
-            if (!mainTimer)
-            {
-                GLib.Timeout.Add(UPDATE_TIME, delegate
-                {
-                    if (!game.enemy_collision)
-                    {
-                        game.obs.move(game.level);
-                        if (!game.safeZone)
-                            game.enemyCollision();
-                        game.wallCollision();
-                        game.checkForCoins();
-                        game.player.changePixPos();
-                    }
-                    game.insideSafeZone();
-                    QueueDraw();
-                    if (game.enemy_collision || game.roundWon)
-                        makePlayerDisappear();
-                    return true;
-
-                });
-                mainTimer = true;
-            }
-        }
-
-        void makePlayerDisappear()
-        {
-            playerOpacity -= 0.03;
-            if (playerOpacity <= 0.0)
-                init();
+            game.gameStateChanged += QueueDraw;
+            game.player.opacityChanged += init;
         }
 
         protected override bool OnKeyPressEvent(EventKey evnt)
@@ -125,13 +90,13 @@ namespace hardestgame
             return true;
         }
 
-            void drawPlayer(Context c)
+        void drawPlayer(Context c)
         {
-            c.SetSourceRGBA(0.0, 0.0, 0.0, playerOpacity);
+            c.SetSourceRGBA(0.0, 0.0, 0.0, game.player.opacity);
             c.Rectangle(game.player.pixPos.X, game.player.pixPos.Y,
                         game.player.size.X, game.player.size.Y);
             c.Fill();
-            c.SetSourceRGBA(1.0, 0.0, 0.0, playerOpacity);
+            c.SetSourceRGBA(game.player.red, game.player.green, game.player.blue, game.player.opacity);
             c.Rectangle(game.player.pixPos.X + 3, game.player.pixPos.Y + 3,
                        game.player.size.X - 6, game.player.size.Y - 6);
             c.Fill();
@@ -183,31 +148,12 @@ namespace hardestgame
             c.Fill();
         }
 
-        void animateCheckPoint(CheckPoints k)
-        {
-            if (k.decrease)
-            {
-                k.l[1] -= 0.01;
-                if (k.l[1] <= 0.4)
-                {
-                    k.decrease = false;
-                    k.increase = true;
-                }
-            }
-            else if (k.increase)
-            {
-                k.l[1] += 0.01;
-                if (k.l[1] >= k.green)
-                    k.increase = false;
-            }
-        }
-
         void drawCheckPoints(Context c)
         {
             foreach (var k in game.checkPoint)
             {
                 if (k.beingAnimated)
-                    animateCheckPoint(k);
+                    k.animateCheckPoint();
                 c.SetSourceRGBA(k.l[0], k.l[1], k.l[2], k.l[3]);
                 c.Rectangle(k.topLeftPos.X, k.topLeftPos.Y, k.length, k.height);
                 c.Fill();

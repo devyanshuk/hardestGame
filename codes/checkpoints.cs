@@ -35,5 +35,24 @@ namespace hardestgame
             beingAnimated = increase = decrease = false;
             l = new List<double> {red, green, blue, opacity };
         }
+
+        public void animateCheckPoint()
+        {
+            if (decrease)
+            {
+                l[1] -= 0.02;
+                if (l[1] <= 0.2)
+                {
+                    decrease = false;
+                    increase = true;
+                }
+            }
+            else if (increase)
+            {
+                l[1] += 0.02;
+                if (l[1] >= green)
+                    increase = false;
+            }
+        }
     }
 }
