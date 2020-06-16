@@ -1,11 +1,7 @@
 using System;
 using Cairo;
 using System.Collections.Generic;
-using System.Linq;
-using static XY_DIRS;
-using static CIRCLE_DIRS;
 using static hardestgame.Movement;
-using System.IO;
 
 namespace hardestgame
 {
@@ -15,21 +11,19 @@ namespace hardestgame
         public Player player;
         public Obstacle obs;
         public PointD checkPointPos = new PointD(0, 0);
-        public int coinsCollected = 0, totalCoins = 0, level = 1, fails = 0;
+        public int coinsCollected = 0, totalCoins = 0, level = 4, fails = 0;
         public List<PointD> walls;
         public List<CheckPoints> checkPoint;
         public List<PointD> coinPos = new List<PointD>();
         public bool pauseGame, safeZone, enemy_collision, roundWon;
         public char[,] bg;
-        Dictionary<char, Tuple<PointD, CIRCLE_DIRS, double>> cChar;
-        Dictionary<char, Tuple<PointD, CIRCLE_DIRS, double, double, double>> sqChar;
-        List<char> xChar, yChar;
-        List<double> xVel, yVel;
         List<PointD> coinCollected = new List<PointD>();
         public List<PointD> obsList, hitPt;
+        Parser parser = new Parser();
 
         public void init()
         {
+            parser.init();
             walls = new List<PointD>();
             hitPt = new List<PointD>();
             obsList = new List<PointD>();
@@ -37,13 +31,6 @@ namespace hardestgame
             coinPos.AddRange(coinCollected);
             coinsCollected = totalCoins - coinPos.Count;
             coinCollected = new List<PointD>();
-
-            xChar = new List<char>();
-            yChar = new List<char>();
-            xVel = new List<double>();
-            yVel = new List<double>();
-            cChar = new Dictionary<char, Tuple<PointD, CIRCLE_DIRS, double>>();
-            sqChar = new Dictionary<char, Tuple<PointD, CIRCLE_DIRS, double, double, double>>();
 
             if (roundWon && (coinsCollected == totalCoins && totalCoins != 0))
             {
@@ -60,269 +47,13 @@ namespace hardestgame
             bg = new char[MAP_HEIGHT, MAP_WIDTH];
             player = new Player(2.5);
             player.dirs = new bool[4];
-            updateEnv($"./levels/{this.level}.txt", out List<CircleMovement> c,
-                      out List<XyMovement> xy, out List<SquareMovement> sq);
-            //Console.WriteLine($"Coin Count: {coinCollected.Count}");
+            parser.updateEnv($"./levels/{this.level}.txt", player, out List<CircleMovement> c,
+                            out List<XyMovement> xy, out List<SquareMovement> sq, ref walls,
+                            ref checkPoint, ref obsList, ref checkPointPos, ref totalCoins,
+                            ref coinPos, ref bg, ref hitPt);
             obs = new Obstacle(obsList, this.level, hitPt, c, xy, sq);
         }
 
-        void _updateEnv(char ch, PointD pos, PointD newPos, int i, int j)
-        {
-            if (ch != '1' && ch != '#' && ch != 'W' && ch != ']' && ch != '[' && ch != 'H')
-            {
-                if (ch == 'P')
-                {
-                    player.pixPos = (checkPointPos.X != 0 && checkPointPos.Y != 0) ? checkPointPos : pos;
-                    //checkPoint.Add(pos);
-                }
-                //else if (ch == 'C') checkPoint.Add(pos);
-                else if (checkPointPos.X == 0 && checkPointPos.Y == 0 && ch == 'X')
-                {
-                    totalCoins++;
-                    coinPos.Add(newPos);
-                }
-                else if (ch == '2')
-                {
-                    if (checkPointPos.X == 0 && checkPointPos.Y == 0)
-                    {
-                        totalCoins++;
-                        coinPos.Add(newPos);
-                    }
-                    obsList.Add(newPos);
-
-                }
-                else if (ch == ';' || ch == 'V' || ch == '^')
-                {
-                    obsList.Add(newPos);
-                    obsList.Add(new PointD(newPos.X + ((ch == ';') ?
-                                View.CELL_WIDTH / 2 : 0),
-                                newPos.Y + ((ch == 'V') ? View.CELL_HEIGHT / 2 :
-                                (ch == '^') ? -View.CELL_HEIGHT / 2 : 0)));
-                }
-                else
-                {
-                    newPos = new PointD(pos.X + 30 + ((ch == '>' || ch == ')')?
-                                        View.CELL_WIDTH / 2 : (ch == '<' || ch == '(') ?
-                                        -View.CELL_WIDTH / 2 : 0), pos.Y + 30);
-                    obsList.Add(newPos);
-                }
-                ch = (ch != '!' && ch != ':') ? '1' : 'W';
-            }
-            bg[i, j] = ch;
-            if (ch == 'W') walls.Add(pos);
-            else if (ch == '[' || ch == ']')
-            {
-                walls.Add(pos);
-                newPos = new PointD(newPos.X + ((ch == ']') ? View.CELL_WIDTH / 2 :
-                                    (ch == '[') ? -View.CELL_WIDTH / 2 : 0), newPos.Y);
-                obsList.Add(newPos);
-            }
-
-            else if (ch == 'H')
-            {
-                walls.Add(pos);
-                hitPt.Add(pos);
-            }
-        }
-
-        void parseSquareMovement(List<string> sp)
-        {
-            CIRCLE_DIRS d = (sp[1] == "(") ? clockwise : anticlockwise;
-
-            double.TryParse(sp[2], out double vel);
-            double.TryParse(sp[3], out double x);
-            double.TryParse(sp[4], out double y);
-            double.TryParse(sp[5], out double l);
-            double.TryParse(sp[6], out double b);
-
-            for (int j = 7; j < sp.Count; j++)
-                if (!sqChar.ContainsKey(char.Parse(sp[j])))
-                    sqChar.Add(char.Parse(sp[j]),
-                                Tuple.Create(new PointD(x, y), d, vel, l, b));
-        }
-
-        void parseYMovement(List<string> sp)
-        {
-            for (int j = 1; j < sp.Count; j++)
-            {
-                if (j % 2 == 1)
-                    yChar.Add(char.Parse(sp[j]));
-                else
-                {
-                    double.TryParse(sp[j], out double v);
-                    yVel.Add(v);
-                }
-            }
-
-        }
-
-        void parseCircleMovement(List<string> sp)
-        {
-            CIRCLE_DIRS dir = (sp[1] == "(") ? clockwise : anticlockwise;
-            double.TryParse(sp[2], out double vel);
-            double.TryParse(sp[3], out double x);
-            double.TryParse(sp[4], out double y);
-
-            PointD centre = new PointD(x * View.CELL_WIDTH + View.CELL_WIDTH / 2,
-                                    y * View.CELL_HEIGHT + View.CELL_HEIGHT / 2);
-            for (int j = 5; j < sp.Count; j++)
-                if (!cChar.ContainsKey(char.Parse(sp[j])))
-                    cChar.Add(char.Parse(sp[j]), Tuple.Create(centre, dir, vel));
-        }
-
-        void parseXMovement(List<string> sp)
-        {
-            for (int j = 1; j < sp.Count; j++)
-            {
-                if (j % 2 == 1)
-                    xChar.Add(char.Parse(sp[j]));
-                else
-                {
-                    double.TryParse(sp[j], out double v);
-                    xVel.Add(v);
-                }
-            }
-        }
-
-        void parseCheckPoints(List<string> sp)
-        {
-            double.TryParse(sp[1], out double tlpX);
-            double.TryParse(sp[2], out double tlpY);
-            double.TryParse(sp[3], out double l);
-            double.TryParse(sp[4], out double h);
-            checkPoint.Add(new CheckPoints(new PointD(tlpX, tlpY), l, h));
-        }
-
-
-        void parseMovementsAndCheckPoints(StreamReader r)
-        {
-            while (r.ReadLine() is string s)
-            {
-                List<string> sp = s.Split().ToList();
-                if (sp.Count <= 0 || s == "") break;
-                if (sp[0] == "()")
-                    parseCircleMovement(sp);
-                else if (sp[0] == "-")
-                    parseXMovement(sp);
-                else if (sp[0] == "|")
-                    parseYMovement(sp);
-                else if (sp[0] == "[]")
-                    parseSquareMovement(sp);
-                else if (sp[0] == "ch")
-                    parseCheckPoints(sp);
-            }
-        }
-
-        List<CircleMovement> copyCircleMovements(StreamReader r, List<CircleMovement> k)
-        {
-            var l = new List<CircleMovement>();
-            while (r.ReadLine() is string s)
-            {
-                List<string> st = s.Split().ToList();
-                if (st[0] == "cp")
-                {
-                    CIRCLE_DIRS dir = (st[1] == "(") ? clockwise : anticlockwise;
-                    double x, y, vel;
-                    double.TryParse(st[3], out x);
-                    double.TryParse(st[4], out y);
-                    double.TryParse(st[2], out vel);
-                    x = x * View.CELL_WIDTH + View.CELL_WIDTH / 2;
-                    y = y * View.CELL_HEIGHT + View.CELL_HEIGHT / 2;
-
-                    for (int i = 0; i < k.Count; i++)
-                    {
-                        l.Add(new CircleMovement(vel, new PointD(k[i].pos.X + x - k[i].centre.X,
-                            k[i].pos.Y + y - k[i].centre.Y), 0, new PointD(x, y), dir));
-                    }
-                }
-            }
-            return l;
-        }
-
-        List<CircleMovement> addCircularMovement(char ch, PointD pos, PointD newPos)
-        {
-            var t = cChar[ch];
-            var l = new List<CircleMovement>();
-            l.Add(new CircleMovement(t.Item3, new PointD(pos.X + View.CELL_WIDTH / 2
-                                    + ((ch == '>' || ch == ')' || ch == ']'
-                                    || ch == ':') ? View.CELL_WIDTH / 2
-                                    : (ch == '<' || ch == '(' || ch == '[') ?
-                                    -View.CELL_WIDTH / 2 : 0), pos.Y +
-                                    View.CELL_HEIGHT / 2 + ((ch == '!') ?
-                                    View.CELL_HEIGHT / 2 : 0)), 0, t.Item1, t.Item2));
-
-            if (ch == ';' || ch == 'V' || ch == '^' || ch == '.')
-            {
-                PointD n = new PointD(newPos.X + ((ch == ';' || ch == ':' || ch == '.') ?
-                    View.CELL_WIDTH / 2 : 0), newPos.Y + ((ch == 'V') ? View.CELL_HEIGHT / 2 :
-                    (ch == '^') ? -View.CELL_HEIGHT / 2 : 0));
-                l.Add(new CircleMovement(t.Item3, n, 0, t.Item1, t.Item2));
-            }
-            if (ch == '.') l.Add(new CircleMovement(t.Item3,
-                                new PointD(newPos.X - View.CELL_WIDTH / 2,
-                                newPos.Y), 0, t.Item1, t.Item2));
-            return l;
-        }
-
-        List<SquareMovement> addSquareMovement(char ch, PointD newPos)
-        {
-            var t = sqChar[ch];
-            var l = new List<SquareMovement>();
-            l.Add(new SquareMovement(t.Item3, newPos, down, t.Item2, t.Item1, t.Item4, t.Item5));
-            if (ch == ';' || ch == 'V' || ch == '^' || ch == '.')
-            {
-                PointD n = new PointD(newPos.X + ((ch == ';' || ch == ':' || ch == '.') ?
-                    View.CELL_WIDTH / 2 : 0), newPos.Y + ((ch == 'V') ?
-                    View.CELL_HEIGHT / 2 : (ch == '^') ? -View.CELL_HEIGHT / 2 : 0));
-
-                l.Add(new SquareMovement(t.Item3, n, down, t.Item2, t.Item1, t.Item4, t.Item5));
-            }
-            return l;
-        }
-
-        public void updateEnv(string fileName, out List<CircleMovement> circleMov,
-                             out List<XyMovement> xyMov, out List<SquareMovement> sqMov)
-        {
-            circleMov = new List<CircleMovement>();
-            xyMov = new List<XyMovement>();
-            sqMov = new List<SquareMovement>();
-            using (StreamReader r = new StreamReader(fileName))
-            {
-                double.TryParse(r.ReadLine().Split()[3], out player.speed);
-                parseMovementsAndCheckPoints(r);
-                for (int i = 0; i < MAP_HEIGHT; i++)
-                {
-                    string s = r.ReadLine();
-                    for (int j = 0; j < MAP_WIDTH; j++)
-                    {
-                        char ch = s[j];
-
-                        PointD pos = new PointD(View.X_MARGIN + View.CELL_WIDTH * j,
-                                        View.Y_MARGIN + View.CELL_HEIGHT * i);
-                        PointD newPos = new PointD(pos.X + View.CELL_WIDTH / 2,
-                                        pos.Y + View.CELL_HEIGHT / 2);
-
-                        if (cChar.ContainsKey(ch))
-                            circleMov.AddRange(addCircularMovement(ch, pos, newPos));
-                        if (sqChar.ContainsKey(ch))
-                            sqMov.AddRange(addSquareMovement(ch, newPos));
-                        if (xChar.Contains(ch))
-                        {
-                            int index = xChar.IndexOf(ch);
-                            xyMov.Add(new XyMovement(xVel[index], newPos, left));
-                        }
-                        if (yChar.Contains(ch))
-                        {
-                            int index = yChar.IndexOf(ch);
-                            xyMov.Add(new XyMovement(yVel[index], newPos, up));
-                        }
-                        _updateEnv(ch, pos, newPos, i, j);
-                    }
-                }
-                var k = circleMov;
-                circleMov.AddRange(copyCircleMovements(r, k));
-            }
-        }
 
         public void checkForCoins()
         {
