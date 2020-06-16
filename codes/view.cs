@@ -14,11 +14,7 @@ namespace hardestgame
         public const int SCREEN_WIDTH = 1380, SCREEN_HEIGHT = 850;
         Gdk.Color BACKGROUND_COLOR = new Gdk.Color(0, 100, 128);
         public const int Y_MARGIN = 0, X_MARGIN = 0;
-        Gdk.Key[] DIRS = new Gdk.Key[4] { Gdk.Key.Left,
-                                          Gdk.Key.Right,
-                                          Gdk.Key.Up,
-                                          Gdk.Key.Down
-                                        };
+
         const int MUSIC_ICON_X = 1300, MUSIC_ICON_Y = 800,
                   MUSIC_ICON_WIDTH = 48, MUSIC_ICON_HEIGHT = 48;
 
