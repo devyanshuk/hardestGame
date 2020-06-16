@@ -57,25 +57,15 @@ namespace hardestgame
             game.player.opacityChanged += init;
         }
 
-        void updateDir(bool keyRelease, EventKey evnt)
-        {
-            for (int i = 0; i < 4; i++)
-            {
-                bool b = keyRelease ? game.player.dirs[i] : !game.player.dirs[i];
-                if (evnt.Key == DIRS[i] && b)
-                    game.player.dirs[i] = !keyRelease;
-            }
-        }
-
         protected override bool OnKeyPressEvent(EventKey evnt)
         {
-            updateDir(false, evnt);
+            game.player.updateDir(false, evnt);
             return true;
         }
 
         protected override bool OnKeyReleaseEvent(EventKey evnt)
         {
-            updateDir(true, evnt);
+            game.player.updateDir(true, evnt);
             return true;
         }
 

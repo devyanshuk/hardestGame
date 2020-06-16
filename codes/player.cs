@@ -1,9 +1,17 @@
 using Cairo;
+using Gdk;
+
 namespace hardestgame
 {
     public class Player
     {
         public event Notify opacityChanged;
+
+        Key[] DIRS = new Key[4] { Key.Left,
+                                  Key.Right,
+                                  Key.Up,
+                                  Key.Down
+                                };
 
         public PointD pixPos { get; set; }
         public PointD size { get; set; }
@@ -24,7 +32,6 @@ namespace hardestgame
             dirs = new bool[4]; //left, right, up, down
             this.speed = speed;
             opacity = 1.0;
-
         }
 
         public void changePixPos()
@@ -37,6 +44,16 @@ namespace hardestgame
             pos.X += speed * x;
             pos.Y += speed * y;
             pixPos = pos;
+        }
+
+        public void updateDir(bool keyRelease, EventKey evnt)
+        {
+            for (int i = 0; i < 4; i++)
+            {
+                bool b = keyRelease ? dirs[i] : !dirs[i];
+                if (evnt.Key == DIRS[i] && b)
+                    dirs[i] = !keyRelease;
+            }
         }
 
         public void makePlayerDisappear()
