@@ -50,7 +50,7 @@ namespace hardestgame
             obstacle = new Pixbuf("./sprites/obs.png");
             musicOn = new Pixbuf("./music/music_on.png");
             musicOff = new Pixbuf("./music/music_off.png");
-            //music.SoundLocation = "../../ffmusic.wav";
+            //music.SoundLocation = "./music/ffmusic.wav";
             //music.Load();
             //music.PlayLooping();
             game.gameStateChanged += QueueDraw;
@@ -154,7 +154,7 @@ namespace hardestgame
             {
                 if (k.beingAnimated)
                     k.animateCheckPoint();
-                c.SetSourceRGBA(k.l[0], k.l[1], k.l[2], k.l[3]);
+                c.SetSourceRGBA(k.red, k.green, k.blue, k.opacity);
                 c.Rectangle(k.topLeftPos.X, k.topLeftPos.Y, k.length, k.height);
                 c.Fill();
             }

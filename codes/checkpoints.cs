@@ -24,8 +24,9 @@ namespace hardestgame
         public double green = 0.7;
         public double blue = 0.0;
         public double opacity = 0.5;
+
         public bool beingAnimated, increase, decrease;
-        public List<double> l;
+
         public CheckPoints(PointD topLeftPos, double length, double height)
         {
             this.topLeftPos = topLeftPos;
@@ -33,15 +34,14 @@ namespace hardestgame
             this.height = height;
             adjustPos();
             beingAnimated = increase = decrease = false;
-            l = new List<double> {red, green, blue, opacity };
         }
 
         public void animateCheckPoint()
         {
             if (decrease)
             {
-                l[1] -= 0.02;
-                if (l[1] <= 0.2)
+                green -= 0.02;
+                if (green <= 0.2)
                 {
                     decrease = false;
                     increase = true;
@@ -49,8 +49,8 @@ namespace hardestgame
             }
             else if (increase)
             {
-                l[1] += 0.02;
-                if (l[1] >= green)
+                green += 0.02;
+                if (green >= 0.7)
                     increase = false;
             }
         }
