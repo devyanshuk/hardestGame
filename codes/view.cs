@@ -1,6 +1,6 @@
 using Gtk;
 using System;
-using System.Media;
+//using System.Media;
 using Gdk;
 using Cairo;
 using System.Collections.Generic;
@@ -18,15 +18,43 @@ namespace hardestgame
         const int MUSIC_ICON_X = 1300, MUSIC_ICON_Y = 800,
                   MUSIC_ICON_WIDTH = 48, MUSIC_ICON_HEIGHT = 48;
 
-        Pixbuf dollar, obstacle, musicOn, musicOff;
-        SoundPlayer music;
+        const int MENU_ICON_X = 20, MENU_ICON_Y = 800,
+                  MENU_ICON_WIDTH = 50, MENU_ICON_HEIGHT = 50;
+
+
+
+        Pixbuf dollar, obstacle, musicOn, musicOff, menu;
+        //SoundPlayer music;
         bool playMusic = true;
         PointD mouseLocation;
+
+        //int currPage = 1;
+        bool displayAllLevels;
+        bool menuLogoSelected;
+
+        Parser parser = new Parser();
+        char[,] bg;
+        List<ImageSurface> allLevels;
+
+        ImageSurface menuOptions;
 
         Game game;
 
         public View() : base("World's Hardest game")
         {
+            dollar = new Pixbuf("./sprites/dollar.png");
+            obstacle = new Pixbuf("./sprites/obs.png");
+            musicOn = new Pixbuf("./music/music_on.png");
+            musicOff = new Pixbuf("./music/music_off.png");
+            menu = new Pixbuf("./sprites/menu.png").ScaleSimple(50, 50, InterpType.Bilinear);
+            menuOptions = new ImageSurface(Format.Argb32, 500, 500);
+            addMenuOptions();
+
+            //music.SoundLocation = "../../ffmusic.wav";
+
+            allLevels = new List<ImageSurface>();
+            addAllLevels();
+
             AddEvents((int)(EventMask.ButtonPressMask |
                      EventMask.ButtonReleaseMask |
                      EventMask.KeyPressMask |
@@ -35,28 +63,65 @@ namespace hardestgame
             Resize(SCREEN_WIDTH, SCREEN_HEIGHT);
             ModifyBg(StateType.Normal, BACKGROUND_COLOR);
             game = new Game();
+
             init();
         }
 
         void init()
         {
-            music = new SoundPlayer();
+            menuLogoSelected = false;
+            displayAllLevels = false;
+            //music = new SoundPlayer();
             game.init();
-            dollar = new Pixbuf("./sprites/dollar.png");
-            obstacle = new Pixbuf("./sprites/obs.png");
-            musicOn = new Pixbuf("./music/music_on.png");
-            musicOff = new Pixbuf("./music/music_off.png");
-            //music.SoundLocation = "./music/ffmusic.wav";
             //music.Load();
             //music.PlayLooping();
             game.gameStateChanged += QueueDraw;
             game.player.opacityChanged += init;
         }
 
+        void addMenuOptions()
+        {
+            using (Context c = new Context(menuOptions))
+            {
+                c.SetSourceRGBA(0.3, 0, 0.6, 0.3);
+                c.Rectangle(0, 0, 500, 500);
+                c.Fill();
+            }
+        }
+
+        void addAllLevels()
+        {
+            int level = 1;
+            while (true)
+            {
+                try
+                {
+                    bg = new char[Game.MAP_HEIGHT, Game.MAP_WIDTH];
+                    parser.updateEnv($"./levels/{level}.txt", ref bg);
+                    level++;
+                    ImageSurface s = new ImageSurface(Format.Argb32, 460, 284);
+                    using (Context c = new Context(s))
+                    {
+                        c.SetSourceRGBA(1.0, 0, 0, 0.5);
+                        c.Rectangle(new PointD(0,0), 460, 284);
+                        c.Fill();
+                        drawMap(c, 20, 20, bg, true);
+                        allLevels.Add(s);
+                    }
+                }
+
+                catch (System.IO.FileNotFoundException)
+                {
+                    break;
+                }
+            }
+        }
+
         protected override bool OnKeyPressEvent(EventKey evnt)
         {
             game.player.updateDir(false, evnt);
             return true;
+
         }
 
         protected override bool OnKeyReleaseEvent(EventKey evnt)
@@ -71,12 +136,21 @@ namespace hardestgame
             return true;
         }
 
+        bool pointerInsideObj(double a, double b, int x, int y, int l, int h)
+        {
+            return (a >= x && a <= x + l && b >= y && b <= y + h);
+        }
+
         protected override bool OnButtonPressEvent(EventButton evnt)
         {
             double a = mouseLocation.X, b = mouseLocation.Y;
-            if (a >= MUSIC_ICON_X && a <= MUSIC_ICON_X + MUSIC_ICON_WIDTH &&
-                b >= MUSIC_ICON_Y && b <= MUSIC_ICON_Y + MUSIC_ICON_HEIGHT)
+
+            if (pointerInsideObj(a,b, MUSIC_ICON_X, MUSIC_ICON_Y, MUSIC_ICON_WIDTH, MUSIC_ICON_HEIGHT))
                 playMusic = !playMusic;
+
+            if (pointerInsideObj(a, b, MENU_ICON_X, MENU_ICON_Y, MENU_ICON_WIDTH, MENU_ICON_HEIGHT))
+                menuLogoSelected = !menuLogoSelected;
+
             return true;
         }
 
@@ -92,22 +166,20 @@ namespace hardestgame
             c.Fill();
         }
 
-        void drawMap(Context c)
+        void drawMap(Context c, int x, int y, char[,] bg, bool allLevels)
         {
             for (int i = 0; i < Game.MAP_HEIGHT; i++)
             {
                 for (int j = 0; j < Game.MAP_WIDTH; j++)
                 {
-                    if (game.bg[i, j] == '1')
+                    PointD currPos = new PointD(X_MARGIN + x * j,
+                                                Y_MARGIN + y * i);
+                    if (bg[i, j] == '1')
                     {
-                        PointD currPos = new PointD(X_MARGIN + CELL_WIDTH * j,
-                                                    Y_MARGIN + CELL_HEIGHT * i);
                         c.MoveTo(currPos);
-                        if (j % 2 == i % 2)
-                            c.SetSourceRGB(1.0, 1.0, 1.0);
-                        else
-                            c.SetSourceRGB(0.6, 0.9, 0.9);
-                        c.Rectangle(currPos.X, currPos.Y, CELL_WIDTH, CELL_HEIGHT);
+                        if (j % 2 == i % 2) c.SetSourceRGB(1.0, 1.0, 1.0);
+                        else c.SetSourceRGB(0.6, 0.9, 0.9);
+                        c.Rectangle(currPos.X, currPos.Y, x, y);
                         c.Fill();
                     }
                 }
@@ -168,17 +240,40 @@ namespace hardestgame
             c.Paint();
         }
 
+        void displayLevelMenu(Context c)
+        {
+            if (displayAllLevels)
+            {
+                c.SetSourceSurface(allLevels[4], 20, 560);
+                c.Paint();
+            }
+        }
+
+        void displayMenu(Context c)
+        {
+            if (menuLogoSelected)
+            {
+                c.SetSourceSurface(menuOptions, 400, 190);
+                c.Paint();
+            }
+        }
+
+
         protected override bool OnExposeEvent(EventExpose evnt)
         {
             using (Context c = CairoHelper.Create(GdkWindow))
             {
-                drawMap(c);
+                drawMap(c, CELL_WIDTH, CELL_HEIGHT, game.bg, false);
                 drawCheckPoints(c);
                 drawSprite(c, game.coinPos, dollar);
                 updateScoreAndLives(c);
                 drawSprite(c, game.obs.pos, obstacle);
                 drawPlayer(c);
                 drawMusicIcon(c);
+                CairoHelper.SetSourcePixbuf(c, menu, MENU_ICON_X, MENU_ICON_Y);
+                c.Paint();
+                displayMenu(c);
+                displayLevelMenu(c);
             }
             game.player.canNotMove = new bool[4];
             return true;
@@ -189,7 +284,6 @@ namespace hardestgame
             Application.Quit();
             return true;
         }
-
 
         static void Main()
         {

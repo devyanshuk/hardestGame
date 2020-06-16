@@ -26,6 +26,28 @@ namespace hardestgame
             sqChar = new Dictionary<char, Tuple<PointD, CIRCLE_DIRS, double, double, double>>();
         }
 
+        public void updateEnv(string fileName, ref char[,]bg)
+        {
+            List<char> wallChars = new List<char> {'#', 'W', ']', '[' };
+            using (StreamReader r = new StreamReader(fileName))
+            {
+                while (r.ReadLine() is string s)
+                {
+                    if (s == "")
+                        break;
+                }
+                for (int i = 0; i < Game.MAP_HEIGHT; i++)
+                {
+                    string s = r.ReadLine();
+                    for (int j = 0; j < Game.MAP_WIDTH; j++)
+                    {
+                        if (!wallChars.Contains(s[j]))
+                            bg[i, j] = '1';
+                    }
+                }
+            }
+        }
+
         public void updateEnv(string fileName, Player player, out List<CircleMovement> circleMov,
                      out List<XyMovement> xyMov, out List<SquareMovement> sqMov,
                      ref List<PointD> walls, ref List<CheckPoints> checkPoint, ref List<PointD> obsList,
