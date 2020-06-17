@@ -6,7 +6,7 @@ namespace hardestgame
 {
     public class CheckPoints : Rectangle
     {
-        public bool beingAnimated, increase, decrease;
+        public bool beingAnimated;
 
         public CheckPoints(PointD topLeftPos, double length, double height)
         {

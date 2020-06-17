@@ -28,7 +28,7 @@ namespace hardestgame
 
         public void updateEnv(string fileName, ref char[,]bg)
         {
-            List<char> wallChars = new List<char> {'#', 'W', ']', '[' };
+            List<char> wallChars = new List<char> {'#', 'W', ']', '[', 'H' };
             using (StreamReader r = new StreamReader(fileName))
             {
                 while (r.ReadLine() is string s)
@@ -312,5 +312,4 @@ namespace hardestgame
             return l;
         }
     }
-
 }

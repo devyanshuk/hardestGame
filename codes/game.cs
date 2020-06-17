@@ -16,7 +16,7 @@ namespace hardestgame
         public Player player;
         public Obstacle obs;
         public PointD checkPointPos = new PointD(0, 0);
-        public int coinsCollected = 0, totalCoins = 0, level = 8, fails = 0;
+        public int coinsCollected = 0, totalCoins = 0, level = 2, fails = 0;
         public List<Wall> walls;
         public List<CheckPoints> checkPoint;
         public List<PointD> coinPos = new List<PointD>();
@@ -29,6 +29,17 @@ namespace hardestgame
         public Game()
         {
             startTimer();
+        }
+
+        public void clear()
+        {
+            totalCoins = 0;
+            coinCollected.Clear();
+            checkPoint.Clear();
+            coinPos.Clear();
+            coinsCollected = 0;
+            roundWon = false;
+            checkPointPos = new PointD(0, 0);
         }
 
         public void init()
@@ -71,11 +82,14 @@ namespace hardestgame
                 if (!enemy_collision)
                 {
                     obs.move(level);
-                    if (!safeZone)
-                        enemyCollision();
-                    wallCollision();
-                    checkForCoins();
-                    player.changePixPos();
+                    if (!View.displayAllLevels)
+                    {
+                        if (!safeZone)
+                            enemyCollision();
+                        wallCollision();
+                        checkForCoins();
+                        player.changePixPos();
+                    }
                 }
                 insideSafeZone();
                 if (enemy_collision || roundWon)
@@ -148,7 +162,8 @@ namespace hardestgame
         public bool collision(PointD po, double radX, double radY, double a)
         {
             var l = getHitPoints(po, radX, radY, a);
-            return (player.collision(l[0]) || player.collision(l[1]) || player.collision(l[2]) || player.collision(l[3]));
+            return (player.collision(l[0]) || player.collision(l[1]) ||
+                    player.collision(l[2]) || player.collision(l[3]));
         }
 
         public void enemyCollision()

@@ -9,11 +9,13 @@ namespace hardestgame
         public double width { get; set; }
         public double height { get; set; }
         public PointD topLeftPos { get; set; }
-        public string text { get; set; }
         public double red { get; set; }
         public double green { get; set; }
         public double blue { get; set; }
         public double opacity { get; set; }
+        public ImageSurface image { get; set; }
+        public bool increase { get; set; }
+        public bool decrease { get; set; }
 
         public void adjustPos()
         {
@@ -29,5 +31,4 @@ namespace hardestgame
                                            p.Y >= topLeftPos.Y &&
                                            p.Y <= topLeftPos.Y + height);
     }
-
 }
