@@ -17,7 +17,7 @@ namespace hardestgame
         public Player player;
         public Obstacle obs;
         public PointD checkPointPos = new PointD(0, 0);
-        public int coinsCollected = 0, totalCoins = 0, level = 9, fails = 0;
+        public int coinsCollected = 0, totalCoins = 0, level = 10, fails = 0;
         public List<Wall> walls;
         public List<CheckPoints> checkPoint;
         public List<PointD> coinPos = new List<PointD>();
@@ -69,6 +69,8 @@ namespace hardestgame
             bg = new char[MAP_HEIGHT, MAP_WIDTH];
             player = new Player(2.5);
             player.dirs = new bool[4];
+            if (level > View.maxLevel)
+                level = 1;
             parser.updateEnv($"./levels/{this.level}.txt", player, out List<CircleMovement> c,
                             out List<XyMovement> xy, out List<SquareMovement> sq, ref walls,
                             ref checkPoint, ref obsList, ref checkPointPos, ref totalCoins,
@@ -82,11 +84,11 @@ namespace hardestgame
             {
                 if (!enemy_collision)
                 {
-                    obs.move(level);
                     if (!View.displayAllLevels)
                     {
                         if (!safeZone)
                             enemyCollision();
+                        obs.move(level);
                         wallCollision();
                         checkForCoins();
                         player.changePixPos();
@@ -98,6 +100,7 @@ namespace hardestgame
                 gameStateChanged?.Invoke();
                 player.canNotMove = new bool[4];
                 return true;
+
             });
         }
 
@@ -115,7 +118,6 @@ namespace hardestgame
                 }
             }
         }
-
         bool coll(double a, double pos, int r) => (a >= (pos - r) && a <= (pos + r));
 
         public void wallCollision()
@@ -164,7 +166,7 @@ namespace hardestgame
         {
             var l = getHitPoints(po, radX, radY, a);
             return l.Any(i => player.collision(i));
-        }
+        }   
 
         public void enemyCollision()
         {
@@ -172,7 +174,7 @@ namespace hardestgame
             {
                 foreach (PointD po in obs.pos)
                 {
-                    if (collision(po, (double)Obstacle.RADIUS, (double)Obstacle.RADIUS, 0))
+                    if (collision(po, (double)Obstacle.RADIUS - 2, (double)Obstacle.RADIUS, 0))
                     {
                         fails++;
                         enemy_collision = true;

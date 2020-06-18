@@ -22,6 +22,8 @@ namespace hardestgame
                                             Gdk.Key.Down
                                           };
 
+        public static int maxLevel = 0;
+
         Rectangle musicIcon, menuIcon, leftArrowIcon, rightArrowIcon;
 
         Pixbuf dollar, musicOn, musicOff, menu, greenMenu;
@@ -164,6 +166,7 @@ namespace hardestgame
                         decrease = false
                     };
                     allLevels.Add(r);
+                    maxLevel++;
                 }
 
                 catch (System.IO.FileNotFoundException)
