@@ -1,5 +1,6 @@
 using System;
 using Cairo;
+using System.Linq;
 using System.Collections.Generic;
 using static hardestgame.Movement;
 public delegate void Notify();
@@ -16,7 +17,7 @@ namespace hardestgame
         public Player player;
         public Obstacle obs;
         public PointD checkPointPos = new PointD(0, 0);
-        public int coinsCollected = 0, totalCoins = 0, level = 2, fails = 0;
+        public int coinsCollected = 0, totalCoins = 0, level = 9, fails = 0;
         public List<Wall> walls;
         public List<CheckPoints> checkPoint;
         public List<PointD> coinPos = new List<PointD>();
@@ -97,7 +98,6 @@ namespace hardestgame
                 gameStateChanged?.Invoke();
                 player.canNotMove = new bool[4];
                 return true;
-
             });
         }
 
@@ -115,6 +115,7 @@ namespace hardestgame
                 }
             }
         }
+
         bool coll(double a, double pos, int r) => (a >= (pos - r) && a <= (pos + r));
 
         public void wallCollision()
@@ -162,8 +163,7 @@ namespace hardestgame
         public bool collision(PointD po, double radX, double radY, double a)
         {
             var l = getHitPoints(po, radX, radY, a);
-            return (player.collision(l[0]) || player.collision(l[1]) ||
-                    player.collision(l[2]) || player.collision(l[3]));
+            return l.Any(i => player.collision(i));
         }
 
         public void enemyCollision()
@@ -172,7 +172,7 @@ namespace hardestgame
             {
                 foreach (PointD po in obs.pos)
                 {
-                    if (collision(po, (double)Obstacle.RADIUS / 2, (double)Obstacle.RADIUS / 2, 0))
+                    if (collision(po, (double)Obstacle.RADIUS, (double)Obstacle.RADIUS, 0))
                     {
                         fails++;
                         enemy_collision = true;
@@ -193,7 +193,7 @@ namespace hardestgame
                      if (c.collision(player.pixPos) &&
                         c.collision(new PointD(player.pixPos.X + player.size.X,
                                                player.pixPos.Y + player.size.Y)))
-                    {
+                     {
                         checkPointPos = c.topLeftPos;
                         safeZone = true;
                         changed = true;
