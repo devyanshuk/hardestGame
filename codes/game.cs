@@ -163,10 +163,8 @@ namespace hardestgame
         }
 
         public bool collision(PointD po, double radX, double radY, double a)
-        {
-            var l = getHitPoints(po, radX, radY, a);
-            return l.Any(i => player.collision(i));
-        }   
+            => getHitPoints(po, radX, radY, a).Any(i => player.collision(i));
+
 
         public void enemyCollision()
         {
@@ -174,8 +172,9 @@ namespace hardestgame
             {
                 foreach (PointD po in obs.pos)
                 {
-                    if (collision(po, (double)Obstacle.RADIUS - 2, (double)Obstacle.RADIUS, 0))
-                    {
+                    if (collision(po, (double)Obstacle.RADIUS - (double)Obstacle.RADIUS / 4
+                                    , (double)Obstacle.RADIUS - (double)Obstacle.RADIUS / 4, 0))
+                        {
                         fails++;
                         enemy_collision = true;
                         pauseGame = true;
