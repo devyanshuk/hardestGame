@@ -19,25 +19,6 @@ namespace hardestgame
             green = 0.7;
             blue = 0.0;
             opacity = 0.5;
-    }
-
-        public void animateCheckPoint()
-        {
-            if (decrease)
-            {
-                green -= 0.02;
-                if (green <= 0.2)
-                {
-                    decrease = false;
-                    increase = true;
-                }
-            }
-            else if (increase)
-            {
-                green += 0.02;
-                if (green >= 0.7)
-                    increase = false;
-            }
         }
     }
 }

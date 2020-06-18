@@ -10,7 +10,7 @@ namespace hardestgame
 {
     public class View : window
     {
-        public const int CELL_WIDTH = 56, CELL_HEIGHT = 56;
+        public const int CELL_WIDTH = 60, CELL_HEIGHT = 60;
         public const int SCREEN_WIDTH = 1380, SCREEN_HEIGHT = 800;
         Gdk.Color BACKGROUND_COLOR = new Gdk.Color(0, 100, 128);
         public const int Y_MARGIN = 0, X_MARGIN = 0;
@@ -24,7 +24,8 @@ namespace hardestgame
 
         Rectangle musicIcon, menuIcon, leftArrowIcon, rightArrowIcon;
 
-        Pixbuf dollar, obstacle, musicOn, musicOff, menu, greenMenu;
+        Pixbuf dollar, musicOn, musicOff, menu, greenMenu;
+        //Pixbuf obstacle;
         Pixbuf left, right, leftGreen, rightGreen;
         //SoundPlayer music;
         bool playMusic = true;
@@ -37,6 +38,8 @@ namespace hardestgame
         Parser parser = new Parser();
         char[,] bg;
         List<Rectangle> allLevels;
+
+        ImageSurface obs;
 
         Game game;
 
@@ -70,10 +73,22 @@ namespace hardestgame
                 height = 50
             };
 
+            obs = new ImageSurface(Format.Argb32, 27, 27);
+            using (Context c = new Context(obs))
+            {
+                c.SetSourceRGBA(0, 0, 1, 0.5);
+                c.Arc(13, 13, 12, 0, 2 * Math.PI);
+                c.Fill();
+                c.SetSourceRGB(0, 0, 0);
+                c.Arc(13, 13, 12, 0, 2 * Math.PI);
+                c.Stroke();
+            }
+
+
             dollar = new Pixbuf("./sprites/dollar.png");
             greenMenu = new Pixbuf("./sprites/menu_green.png").ScaleSimple((int)menuIcon.width,
                              (int)menuIcon.height, InterpType.Bilinear);
-            obstacle = new Pixbuf("./sprites/obs.png");
+            //obstacle = new Pixbuf("./sprites/obs.png");
             musicOn = new Pixbuf("./music/music_on.png").ScaleSimple((int)musicIcon.width,
                                    (int)musicIcon.height, InterpType.Bilinear);
             musicOff = new Pixbuf("./music/music_off.png");
@@ -155,7 +170,6 @@ namespace hardestgame
                 {
                     break;
                 }
-
             }
         }
 
@@ -211,7 +225,10 @@ namespace hardestgame
                 {
                     currPage+=2;
                     if (currPage > allLevels.Count - 1)
+                    {
                         currPage = allLevels.Count - 1;
+                        currPage += (allLevels.Count % 2 == 0)? - 1 : 0;
+                    }
                 }
             }
 
@@ -303,9 +320,6 @@ namespace hardestgame
             displayText(c, $"FAILS : {game.fails}", new PointD(1180, 15), 30);
             displayText(c, $"COINS : {game.coinsCollected} / {game.totalCoins}",
                          new PointD(700, 15), 30);
-            c.SetSourceRGB(0.1, 0.4, 0.6);
-            c.Rectangle(0, 750, SCREEN_WIDTH, 50);
-            c.Fill();
         }
 
         void drawCheckPoints(Context c)
@@ -313,7 +327,7 @@ namespace hardestgame
             foreach (var k in game.checkPoint)
             {
                 if (k.beingAnimated)
-                    k.animateCheckPoint();
+                    k.animate(0.02, 0.7, 0.2, false, true);
                 c.SetSourceRGBA(k.red, k.green, k.blue, k.opacity);
                 c.Rectangle(k.topLeftPos.X, k.topLeftPos.Y, k.width, k.height);
                 c.Fill();
@@ -354,7 +368,7 @@ namespace hardestgame
                     Pixbuf l = mouseOnLeftArrowIcon ? leftGreen : left;
                     drawIcon(c, l, leftArrowIcon.topLeftPos.X, leftArrowIcon.topLeftPos.Y);
                 }
-                if (currPage != allLevels.Count - 1)
+                if (currPage <= allLevels.Count - 3)
                 {
                     Pixbuf r = mouseOnRightArrowIcon ? rightGreen : right;
                     drawIcon(c, r, rightArrowIcon.topLeftPos.X, rightArrowIcon.topLeftPos.Y);
@@ -384,30 +398,21 @@ namespace hardestgame
                     var k = allLevels[i];
                     if (k.decrease || k.increase)
                     {
-                        c.SetSourceRGBA(1, 0.4, 1, k.opacity);
+                        k.animate(0.1, 1.0, 0.0, true, false);
+                        c.SetSourceRGBA(0, 1, 0, k.opacity);
                         c.Rectangle(k.topLeftPos, k.width, k.height);
                         c.Stroke();
-                        if (k.decrease)
-                        {
-                            k.opacity -= 0.1;
-                            if (k.opacity <= 0.0)
-                            {
-                                k.decrease = false;
-                                k.increase = true;
-                            }
-                        }
-                        else if (k.increase)
-                        {
-                            k.opacity += 0.1;
-                            if (k.opacity >= 1.0)
-                            {
-                                k.increase = false;
-                                k.decrease = true;
-                            }
-                        }
-
                     }
                 }
+            }
+        }
+
+        void drawEnemy(Context c)
+        {
+            foreach(var i in game.obs.pos)
+            {
+                c.SetSourceSurface(obs, (int)i.X - CELL_WIDTH/4, (int)i.Y - CELL_HEIGHT/4);
+                c.Paint();
             }
         }
 
@@ -419,7 +424,7 @@ namespace hardestgame
                 drawCheckPoints(c);
                 drawSprite(c, game.coinPos, dollar);
                 updateScoreAndLives(c);
-                drawSprite(c, game.obs.pos, obstacle);
+                drawEnemy(c);
                 drawPlayer(c);
                 if (displayAllLevels)
                 {
@@ -428,6 +433,7 @@ namespace hardestgame
                 }
                 drawMusicIcon(c);
                 drawMenuIcon(c);
+                //drawSprite(c, game.obs.pos, obstacle);
             }
             return true;
         }

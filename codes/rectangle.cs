@@ -26,9 +26,38 @@ namespace hardestgame
         }
 
         //check if a point is within the rectangle
-        public bool collision(PointD p) =>(p.X >= topLeftPos.X &&
+        public bool collision(PointD p) => (p.X >= topLeftPos.X &&
                                            p.X <= topLeftPos.X + width &&
                                            p.Y >= topLeftPos.Y &&
                                            p.Y <= topLeftPos.Y + height);
+
+        public void animate(double factor, double upper, double lower, bool continuous, bool checkPoint)
+        {
+            var k = checkPoint ? green : opacity;
+            if (decrease)
+            {
+                k -= factor;
+                if (k <= lower)
+                {
+                    decrease = false;
+                    increase = true;
+                }
+            }
+            else if (increase)
+            {
+                k += factor;
+                if (k >= upper)
+                {
+                    increase = false;
+                    if (continuous)
+                        decrease = true;
+                }
+            }
+            if (checkPoint)
+                green = k;
+            else
+                opacity = k;
+
+        }
     }
 }
