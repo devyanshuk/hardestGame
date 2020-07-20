@@ -2,7 +2,7 @@
 
 ### Level 6 Screenshot:
 
-![](sprites/lvl_6.png)
+![](sprites/level_6.gif)
 
 ### MacOs :
 
