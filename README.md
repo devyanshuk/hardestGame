@@ -1,5 +1,9 @@
 ### C# implementation of the [World's Hardest Game](https://www.coolmathgames.com/0-worlds-hardest-game)
 
+### Game Screenshot:
+
+![](sprites/lvl_6.png)
+
 ### MacOs :
 
 Before building the project, make sure you download and install [Mono](https://www.mono-project.com/download/stable/)
