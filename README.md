@@ -1,6 +1,6 @@
 ### C# implementation of the [World's Hardest Game](https://www.coolmathgames.com/0-worlds-hardest-game)
 
-### Level 6 gameplay:
+### Level 6 gameplay :
 
 ![](sprites/lvl_6.gif)
 
